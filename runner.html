@@ -215,11 +215,16 @@
 
     function gameOver(playerWon) {
       gameRunning = false;
-      if (score > highscore) {
-        localStorage.setItem("quizRunnerHighscore", score);
+      if (questions.length === 0 && lives > 0) {
+        // Player answered all questions correctly and still has lives left
+        document.getElementById("game-over-message").textContent = "Congratulations! You've completed the quiz!";
+      } else {
+        if (score > highscore) {
+          localStorage.setItem("quizRunnerHighscore", score);
+        }
+        const message = playerWon ? "You are worthy to be a BlendRunner" : "Sorry your wheels fell off";
+        document.getElementById("game-over-message").textContent = message;
       }
-      const message = playerWon ? "You are worthy to be a BlendRunner" : "Sorry your wheels fell off";
-      document.getElementById("game-over-message").textContent = message;
       document.getElementById("game-over-box").style.display = "block";
     }
 
@@ -242,57 +247,4 @@
 
       document.getElementById("score").textContent = score;
       document.getElementById("lives").textContent = lives;
-      document.getElementById("game-over-box").style.display = "none";
-      update();
-    }
-
-    function update() {
-      if (!gameRunning) return;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Player physics
-      if (player.jumping) {
-        player.vy += gravity;
-        player.y += player.vy;
-        if (player.y >= ground - player.height) {
-          player.y = ground - player.height;
-          player.jumping = false;
-          player.vy = 0;
-        }
-      }
-
-      // Move obstacles
-      obstacles.forEach(ob => ob.x -= gameSpeed);
-
-      // Check for collision
-      if (currentObstacle) {
-        if (currentObstacle.x <= player.x + player.width &&
-            currentObstacle.x + currentObstacle.width > player.x) {
-          if (correctAnswerGiven && !player.jumping) {
-            player.vy = jumpPower;
-            player.jumping = true;
-            score += 10;
-            document.getElementById("score").textContent = score;
-            correctAnswerGiven = false;
-            currentObstacle = null;
-          } else if (!correctAnswerGiven && !player.jumping && !player.hit) {
-            loseLife(true);
-            currentObstacle = null;
-          }
-        }
-      }
-
-      // Remove off-screen obstacles
-      obstacles = obstacles.filter(ob => ob.x + ob.width > 0);
-
-      drawPlayer();
-      drawObstacles();
-
-      requestAnimationFrame(update);
-    }
-
-    update();
-  </script>
-</body>
-</html>
+      document.getElement

@@ -149,206 +149,207 @@
     .start-content button:hover {
       background-color: #45a049;
     }
+
+    .flash {
+      animation: flashRed 0.3s;
+    }
+
+    @keyframes flashRed {
+      0% { background-color: #f44336; }
+      100% { background-color: #f0f8ff; }
+    }
   </style>
 </head>
 <body>
-  <div id="start-screen">
-    <div class="start-content">
-      <h1>Welcome to Quiz Runner</h1>
-      <button id="start-btn" class="btn">Start Game</button>
-    </div>
-  </div>
-
   <canvas id="gameCanvas" width="800" height="400"></canvas>
   <div id="question-box">
     <h3 id="question-text"></h3>
     <div id="options"></div>
   </div>
   <div id="scoreboard">
-    <div>Score: <span id="score">0</span></div>
-    <div>Lives: <span id="lives">3</span></div>
-    <div>High Score: <span id="highscore">0</span></div>
+    Score: <span id="score">0</span><br>
+    Lives: <span id="lives">3</span>
+  </div>
+  <div id="start-screen">
+    <div class="start-content">
+      <h1>Quiz Runner</h1>
+      <button id="start-btn">Start Game</button>
+    </div>
   </div>
   <div id="game-over-box">
-    <h2 id="game-over-message"></h2>
-    <button class="btn" onclick="restartGame()">Race Again</button>
-    <button class="btn" onclick="quitGame()">Quit to Start</button>
+    <h2>Game Over!</h2>
+    <p>Your score: <span id="final-score"></span></p>
+    <button class="btn" onclick="location.reload()">Play Again</button>
   </div>
-
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+    const questionBox = document.getElementById("question-box");
+    const questionText = document.getElementById("question-text");
+    const optionsContainer = document.getElementById("options");
 
     let score = 0;
     let lives = 3;
-    let highscore = localStorage.getItem("quizRunnerHighscore") || 0;
-    document.getElementById("highscore").textContent = highscore;
-
-    const ground = 350;
-    const gravity = 1.2;
-    const jumpPower = -15;
-    const gameSpeed = 4;
+    let gameRunning = true;
+    let currentQuestionIndex = -1;
+    let obstacle = null;
+    let questionInterval;
+    let correctStreak = 0;
 
     const player = {
-      x: 50,
-      y: ground - 40,
+      x: 100,
+      y: 300,
       width: 40,
-      height: 40,
+      height: 40,  // Reduced height
       vy: 0,
-      jumping: false
+      gravity: 1.5,
+      jumpStrength: -18,
+      grounded: true,
+      update() {
+        this.vy += this.gravity;
+        this.y += this.vy;
+        if (this.y >= 300) {
+          this.y = 300;
+          this.vy = 0;
+          this.grounded = true;
+        }
+      },
+      jump() {
+        if (this.grounded) {
+          this.vy = this.jumpStrength;
+          this.grounded = false;
+        }
+      },
+      draw() {
+        const stretch = this.vy < 0 ? 1.2 : this.vy > 5 ? 0.8 : 1;
+        const height = this.height * stretch;
+        const width = this.width * (2 - stretch);
+        ctx.fillStyle = "#ff5722";
+        ctx.fillRect(this.x, this.y + this.height - height, width, height);
+      }
     };
 
-    let obstacles = [];
-    let questions = [
-      { question: "Capital of France?", options: ["Paris", "London", "Berlin", "Rome"], answer: "Paris" },
-      { question: "Red Planet?", options: ["Venus", "Earth", "Mars", "Jupiter"], answer: "Mars" },
-      { question: "Largest mammal?", options: ["Elephant", "Shark", "Blue Whale", "Rhino"], answer: "Blue Whale" },
-      { question: "HTML means?", options: ["HyperText Markup Language", "Code", "Structure", "Format"], answer: "HyperText Markup Language" },
-      { question: "Continents?", options: ["5", "6", "7", "8"], answer: "7" },
-      { question: "Deepest ocean?", options: ["Indian", "Pacific", "Arctic", "Atlantic"], answer: "Pacific" },
-      { question: "Photosynthesis gas?", options: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"], answer: "Carbon Dioxide" },
-      { question: "√64?", options: ["6", "8", "7", "9"], answer: "8" },
-      { question: "WW2 End Year?", options: ["1945", "1940", "1939", "1950"], answer: "1945" },
-      { question: "Boiling point of water?", options: ["100°C", "90°C", "80°C", "110°C"], answer: "100°C" }
+    const questions = [
+      { q: "What is the capital of France?", options: ["Paris", "Rome", "Berlin", "Madrid"], answer: "Paris" },
+      { q: "What is 5 + 3?", options: ["8", "6", "9", "7"], answer: "8" },
+      { q: "Who painted the Mona Lisa?", options: ["Leonardo da Vinci", "Vincent van Gogh", "Pablo Picasso", "Claude Monet"], answer: "Leonardo da Vinci" },
+      { q: "What is the largest planet?", options: ["Jupiter", "Saturn", "Earth", "Mars"], answer: "Jupiter" },
+      { q: "Who wrote 'Romeo and Juliet'?", options: ["William Shakespeare", "Charles Dickens", "Jane Austen", "Mark Twain"], answer: "William Shakespeare" },
+      { q: "What is the square root of 16?", options: ["4", "8", "16", "2"], answer: "4" },
+      { q: "Which gas do plants absorb from the air?", options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Hydrogen"], answer: "Carbon dioxide" },
+      { q: "What is the boiling point of water?", options: ["100°C", "90°C", "110°C", "120°C"], answer: "100°C" },
+      { q: "What is the capital of Japan?", options: ["Tokyo", "Seoul", "Beijing", "Bangkok"], answer: "Tokyo" },
+      { q: "What is the hardest natural substance?", options: ["Diamond", "Gold", "Iron", "Platinum"], answer: "Diamond" }
     ];
 
-    let usedQuestions = [];
-    let currentQuestion = null;
-    let awaitingAnswer = false;
-    let correctAnswerGiven = false;
-
-    function drawPlayer() {
-      ctx.fillStyle = "#FF6347";
-      ctx.fillRect(player.x, player.y, player.width, player.height);
-    }
-
-    function drawObstacles() {
-      ctx.fillStyle = "#32CD32";
-      obstacles.forEach(ob => ctx.fillRect(ob.x, ob.y, ob.width, ob.height));
-    }
-
     function spawnQuestionWithObstacle() {
-      if (awaitingAnswer || questions.length === 0) return;
-      const index = Math.floor(Math.random() * questions.length);
-      currentQuestion = questions.splice(index, 1)[0];
-      usedQuestions.push(currentQuestion);
+      if (!gameRunning) return;
+      currentQuestionIndex = (currentQuestionIndex + 1) % questions.length;
+      const q = questions[currentQuestionIndex];
+      showQuestionBox(q);
+      spawnObstacle();
+    }
 
-      const timeUntilImpact = 10000;
-      const distanceToPlayer = gameSpeed * (timeUntilImpact / 16);
-      const ob = {
-        x: player.x + player.width + distanceToPlayer,
-        y: ground - 60,
-        width: 40,
-        height: 60,
-        id: Date.now(),
-        triggerTime: Date.now() + timeUntilImpact
-      };
-
-      obstacles.push(ob);
-      awaitingAnswer = true;
-      correctAnswerGiven = false;
-
-      document.getElementById("question-box").style.display = "block";
-      document.getElementById("question-text").textContent = currentQuestion.question;
-      const optionsDiv = document.getElementById("options");
-      optionsDiv.innerHTML = "";
-      currentQuestion.options.forEach(opt => {
+    function showQuestionBox(question) {
+      questionBox.style.display = "block";
+      questionText.textContent = question.q;
+      optionsContainer.innerHTML = "";
+      question.options.forEach(opt => {
         const btn = document.createElement("button");
         btn.textContent = opt;
         btn.className = "option";
-        btn.onclick = () => handleAnswer(opt);
-        optionsDiv.appendChild(btn);
+        btn.onclick = () => checkAnswer(opt, question.answer);
+        optionsContainer.appendChild(btn);
       });
+    }
 
-      setTimeout(() => {
-        if (awaitingAnswer) {
-          awaitingAnswer = false;
-          document.getElementById("question-box").style.display = "none";
-          correctAnswerGiven = false;
+    function checkAnswer(selected, correct) {
+      questionBox.style.display = "none";
+      if (selected === correct) {
+        correctStreak++;
+        if (correctStreak >= 3) {
+          score += 100;
+          correctStreak = 0; // reset streak
         }
-      }, timeUntilImpact);
+        player.jump();
+        score += 10;
+        document.getElementById("score").textContent = score;
+      } else {
+        correctStreak = 0; // reset streak on wrong answer
+        loseLife();
+      }
     }
 
-    function handleAnswer(selected) {
-      document.getElementById("question-box").style.display = "none";
-      awaitingAnswer = false;
-      correctAnswerGiven = selected === currentQuestion.answer;
+    function spawnObstacle() {
+      obstacle = {
+        x: canvas.width,
+        y: 320, // Increased obstacle height
+        width: 40,
+        height: 80 // Increased obstacle height
+      };
     }
 
-    function loseLife() {
-      lives--;
-      document.getElementById("lives").textContent = lives;
-      if (lives <= 0) gameOver();
+    function drawObstacle() {
+      if (obstacle) {
+        ctx.fillStyle = "#333";
+        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+      }
     }
 
-    function gameOver() {
-      if (score > highscore) localStorage.setItem("quizRunnerHighscore", score);
-      document.getElementById("game-over-message").textContent = lives <= 0 ? "Game Over" : "You Win!";
-      document.getElementById("game-over-box").style.display = "block";
-    }
-
-    function restartGame() {
-      score = 0;
-      lives = 3;
-      obstacles = [];
-      questions = [...usedQuestions];
-      usedQuestions = [];
-      document.getElementById("score").textContent = score;
-      document.getElementById("lives").textContent = lives;
-      document.getElementById("game-over-box").style.display = "none";
-    }
-
-    function quitGame() {
-      document.getElementById("start-screen").style.display = "flex";
-      document.getElementById("game-over-box").style.display = "none";
+    function updateObstacle() {
+      if (obstacle) {
+        obstacle.x -= 6;
+        if (
+          obstacle.x < player.x + player.width &&
+          obstacle.x + obstacle.width > player.x &&
+          player.y + player.height > obstacle.y
+        ) {
+          loseLife();
+          obstacle = null;
+        } else if (obstacle.x + obstacle.width < 0) {
+          obstacle = null;
+        }
+      }
     }
 
     function gameLoop() {
+      if (!gameRunning) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      if (player.jumping) {
-        player.vy += gravity;
-        player.y += player.vy;
-        if (player.y >= ground - player.height) {
-          player.y = ground - player.height;
-          player.jumping = false;
-        }
-      }
-
-      drawPlayer();
-      drawObstacles();
-
-      obstacles.forEach(ob => {
-        ob.x -= gameSpeed;
-        if (ob.x + ob.width < 0) {
-          obstacles = obstacles.filter(o => o.id !== ob.id);
-          return;
-        }
-
-        const isCollision = ob.x < player.x + player.width &&
-                            ob.x + ob.width > player.x &&
-                            ob.y < player.y + player.height &&
-                            ob.y + ob.height > player.y;
-
-        if (isCollision) {
-          loseLife();
-          obstacles = obstacles.filter(o => o.id !== ob.id);
-          return;
-        }
-
-        const timeToImpact = ob.triggerTime - Date.now();
-        if (timeToImpact <= 50 && correctAnswerGiven && !player.jumping) {
-          player.vy = jumpPower;
-          player.jumping = true;
-        }
-      });
-
+      player.update();
+      player.draw();
+      updateObstacle();
+      drawObstacle();
       requestAnimationFrame(gameLoop);
+    }
+
+    function flashCollision() {
+      canvas.classList.add("flash");
+      setTimeout(() => canvas.classList.remove("flash"), 300);
+    }
+
+    function loseLife() {
+      if (!gameRunning) return;
+      lives--;
+      document.getElementById("lives").textContent = lives;
+      flashCollision();
+      if (lives <= 0) {
+        gameOver();
+      }
+    }
+
+    function gameOver() {
+      gameRunning = false;
+      clearInterval(questionInterval);
+      document.getElementById("final-score").textContent = score;
+      document.getElementById("game-over-box").style.display = "block";
     }
 
     document.getElementById("start-btn").addEventListener("click", () => {
       document.getElementById("start-screen").style.display = "none";
-      setInterval(spawnQuestionWithObstacle, 7000);
+      setTimeout(() => {
+        spawnQuestionWithObstacle();
+        questionInterval = setInterval(spawnQuestionWithObstacle, 7000);
+      }, 5000);
       gameLoop();
     });
   </script>

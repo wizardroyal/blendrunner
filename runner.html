@@ -8,73 +8,92 @@
     body {
       margin: 0;
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #e6f7ff;
+      background-color: #f0f8ff;
       overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
 
     #gameCanvas {
       display: block;
-      margin: 0 auto;
       background: linear-gradient(to top, #87ceeb, #ffffff);
-      border: 3px solid #4CAF50;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-    }
-
-    #scoreboard, #game-over-box, #question-box {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      text-align: left;
-      font-size: 18px;
-      color: #333;
-      display: none;
-      background-color: rgba(255, 255, 255, 0.8);
-      padding: 10px;
-      border-radius: 8px;
+      border: 5px solid #4CAF50;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
     }
 
     #scoreboard {
-      display: block;
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      text-align: left;
+      font-size: 18px;
+      color: #333;
       background-color: rgba(255, 255, 255, 0.8);
+      padding: 12px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
 
     #question-box {
-      width: 300px;
-      margin: 20px auto;
+      background: #ffffffee;
+      border: 3px solid #4CAF50;
+      border-radius: 15px;
+      padding: 25px;
+      width: 320px;
       text-align: center;
+      display: none;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     }
 
     .option {
       display: block;
-      margin: 10px auto;
-      padding: 10px 20px;
+      margin: 12px auto;
+      padding: 12px 24px;
       background-color: #4CAF50;
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      transition: background-color 0.3s, transform 0.1s;
     }
 
     .option:hover {
       background-color: #45a049;
+      transform: scale(1.05);
+    }
+
+    #game-over-box {
+      text-align: center;
+      display: none;
+      padding: 25px;
+      background: #fff;
+      border: 2px solid #444;
+      border-radius: 15px;
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
     }
 
     .btn {
-      padding: 12px 24px;
-      font-size: 16px;
-      margin-top: 15px;
+      padding: 14px 28px;
+      font-size: 18px;
+      margin-top: 20px;
       cursor: pointer;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       background-color: #4CAF50;
       color: white;
-      transition: background-color 0.3s ease;
+      transition: background-color 0.3s ease, transform 0.1s ease;
     }
 
     .btn:hover {
       background-color: #45a049;
+      transform: scale(1.05);
     }
 
     #start-screen {
@@ -86,14 +105,16 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #f0f0f0;
+      background: #f7f7f7;
+      z-index: 999;
     }
 
     .start-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       text-align: center;
+      background: #ffffffb3;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
     }
 
     .start-content h1 {
@@ -101,10 +122,24 @@
       font-size: 36px;
       color: #333;
     }
+
+    .start-content button {
+      padding: 15px 30px;
+      background-color: #4CAF50;
+      color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .start-content button:hover {
+      background-color: #45a049;
+    }
   </style>
 </head>
 <body>
-
+  <!-- Start Screen -->
   <div id="start-screen">
     <div class="start-content">
       <h1>Welcome to Quiz Runner</h1>
@@ -112,19 +147,23 @@
     </div>
   </div>
 
+  <!-- Game Canvas -->
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+  <!-- Question Box -->
+  <div id="question-box">
+    <h3 id="question-text"></h3>
+    <div id="options"></div>
+  </div>
+
+  <!-- Scoreboard -->
   <div id="scoreboard">
     <div>Score: <span id="score">0</span></div>
     <div>Lives: <span id="lives">3</span></div>
     <div>High Score: <span id="highscore">0</span></div>
   </div>
 
-  <div id="question-box">
-    <h3 id="question-text"></h3>
-    <div id="options"></div>
-  </div>
-
-  <canvas id="gameCanvas" width="800" height="400"></canvas>
-
+  <!-- Game Over Box -->
   <div id="game-over-box">
     <h2 id="game-over-message"></h2>
     <button class="btn" onclick="restartGame()">Race Again</button>
@@ -172,37 +211,39 @@
     let usedQuestions = [];
     let currentQuestion = null;
     let awaitingAnswer = false;
+    let currentObstacle = null;
     let correctAnswerGiven = false;
-    let gameRunning = false;
+    let gameRunning = true;
+    let canJump = false;
 
+    // Draw the player character with animation
     function drawPlayer() {
-      if (player.hit && player.hitFrame < 10) {
-        ctx.fillStyle = player.hitFrame % 2 === 0 ? "#ff0000" : "#ffaaaa";
-        player.hitFrame++;
-      } else {
-        player.hit = false;
-        player.hitFrame = 0;
-        ctx.fillStyle = "#FF6347";
-      }
+      ctx.fillStyle = "#FF6347"; // Tomato red color
       ctx.fillRect(player.x, player.y, player.width, player.height);
     }
 
+    // Draw obstacles
     function drawObstacles() {
-      ctx.fillStyle = "#32CD32"; 
-      obstacles.forEach(ob => ctx.fillRect(ob.x, ob.y, ob.width, ob.height));
+      ctx.fillStyle = "#32CD32"; // Lime Green
+      obstacles.forEach(ob => {
+        ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
+      });
     }
 
+    // Function to spawn a new question with an obstacle
     function spawnQuestionWithObstacle() {
       if (awaitingAnswer || !gameRunning || questions.length === 0) return;
 
       const index = Math.floor(Math.random() * questions.length);
       currentQuestion = questions.splice(index, 1)[0];
-      usedQuestions.push(currentQuestion);
+      usedQuestions.push(currentQuestion); // Add question to usedQuestions
 
       const ob = { x: canvas.width, y: ground, width: 40, height: 50, id: Date.now() };
       obstacles.push(ob);
+      currentObstacle = ob;
       awaitingAnswer = true;
       correctAnswerGiven = false;
+      canJump = false;
 
       document.getElementById("question-box").style.display = "block";
       document.getElementById("question-text").textContent = currentQuestion.question;
@@ -232,28 +273,41 @@
       awaitingAnswer = false;
       if (selected === currentQuestion.answer) {
         correctAnswerGiven = true;
-        score += 10;  // Increase score for correct answer
+        canJump = true;
       } else {
-        correctAnswerGiven = false;
+        canJump = false;
       }
     }
 
-    function loseLife() {
+    // Lose life and check for game over
+    function loseLife(withAnimation = false) {
       lives--;
       document.getElementById("lives").textContent = lives;
-      if (lives <= 0) gameOver();
+      if (withAnimation) {
+        player.hit = true;
+        player.hitFrame = 0;
+      }
+      if (lives <= 0) {
+        gameOver(false);
+      }
     }
 
-    function gameOver() {
+    // Game Over screen
+    function gameOver(playerWon) {
       gameRunning = false;
-      if (score > highscore) {
-        localStorage.setItem("quizRunnerHighscore", score);
-        document.getElementById("highscore").textContent = score;
+      if (questions.length === 0 && lives > 0) {
+        document.getElementById("game-over-message").textContent = "Congratulations! You've completed the quiz!";
+      } else {
+        if (score > highscore) {
+          localStorage.setItem("quizRunnerHighscore", score);
+        }
+        const message = playerWon ? "You are worthy to be a BlendRunner" : "Sorry your wheels fell off";
+        document.getElementById("game-over-message").textContent = message;
       }
-      document.getElementById("game-over-message").textContent = "Game Over!";
       document.getElementById("game-over-box").style.display = "block";
     }
 
+    // Restart the game
     function restartGame() {
       score = 0;
       lives = 3;
@@ -262,19 +316,28 @@
       player.jumping = false;
       obstacles = [];
       awaitingAnswer = false;
+      currentObstacle = null;
+      correctAnswerGiven = false;
+      canJump = false;
 
-      if (questions.length === 0) questions = [...usedQuestions];
+      // Refill questions from usedQuestions
+      if (questions.length === 0) {
+        questions = [...usedQuestions];
+        usedQuestions = [];
+      }
 
       document.getElementById("score").textContent = score;
       document.getElementById("lives").textContent = lives;
       document.getElementById("game-over-box").style.display = "none";
     }
 
+    // Game loop function
     function gameLoop() {
       if (!gameRunning) return;
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);  
+      ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear canvas for next frame
 
+      // Gravity and Jumping Logic
       if (player.jumping) {
         player.vy += gravity;
         player.y += player.vy;
@@ -287,25 +350,36 @@
       drawPlayer();
       drawObstacles();
 
+      // Update obstacle positions and collision detection
       obstacles.forEach(ob => {
         ob.x -= gameSpeed;
-        if (ob.x + ob.width < 0) obstacles = obstacles.filter(o => o.id !== ob.id);
-        if (ob.x < player.x + player.width && ob.x + ob.width > player.x && ob.y < player.y + player.height && ob.y + ob.height > player.y) loseLife();
+        if (ob.x + ob.width < 0) {
+          obstacles = obstacles.filter(o => o.id !== ob.id);  // Remove obstacles that go off-screen
+        }
+
+        // Check for collision with player
+        if (ob.x < player.x + player.width && ob.x + ob.width > player.x && ob.y < player.y + player.height && ob.y + ob.height > player.y) {
+          loseLife(true);
+        }
       });
 
-      requestAnimationFrame(gameLoop);
+      requestAnimationFrame(gameLoop);  // Keep the game running by requesting another frame
     }
 
+    gameLoop();  // Start the game loop
+
+    // Event listener for jumping
     window.addEventListener("keydown", (e) => {
-      if (e.key === " " && !player.jumping) {
+      if (e.key === " " && !player.jumping && canJump) {  // Spacebar to jump
         player.vy = jumpPower;
         player.jumping = true;
       }
     });
 
+    // Start Game Button
     document.getElementById("start-btn").addEventListener("click", () => {
-      gameRunning = true;
       document.getElementById("start-screen").style.display = "none";
+      gameRunning = true;
       gameLoop();
     });
   </script>

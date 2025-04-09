@@ -21,7 +21,7 @@
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
     }
 
-    #scoreboard {
+    #scoreboard, #game-over-box, #question-box {
       position: absolute;
       top: 10px;
       left: 10px;
@@ -34,19 +34,15 @@
       border-radius: 8px;
     }
 
-    #scoreboard div {
-      margin-bottom: 8px;
+    #scoreboard {
+      display: block;
+      background-color: rgba(255, 255, 255, 0.8);
     }
 
     #question-box {
-      background: #ffffffee;
-      border: 2px solid #4CAF50;
-      border-radius: 10px;
-      padding: 20px;
       width: 300px;
       margin: 20px auto;
       text-align: center;
-      display: none;
     }
 
     .option {
@@ -63,20 +59,6 @@
 
     .option:hover {
       background-color: #45a049;
-    }
-
-    #game-over-box {
-      text-align: center;
-      display: none;
-      padding: 20px;
-      background: #fff;
-      border: 2px solid #444;
-      border-radius: 10px;
-      position: absolute;
-      top: 30%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      box-shadow: 0 0 20px rgba(0,0,0,0.2);
     }
 
     .btn {
@@ -123,7 +105,6 @@
 </head>
 <body>
 
-  <!-- Start Screen -->
   <div id="start-screen">
     <div class="start-content">
       <h1>Welcome to Quiz Runner</h1>
@@ -131,30 +112,202 @@
     </div>
   </div>
 
-  <!-- Scoreboard -->
   <div id="scoreboard">
     <div>Score: <span id="score">0</span></div>
     <div>Lives: <span id="lives">3</span></div>
     <div>High Score: <span id="highscore">0</span></div>
   </div>
 
-  <!-- Quiz Box -->
   <div id="question-box">
     <h3 id="question-text"></h3>
     <div id="options"></div>
   </div>
 
-  <!-- Game Canvas -->
   <canvas id="gameCanvas" width="800" height="400"></canvas>
 
-  <!-- Game Over Box -->
   <div id="game-over-box">
     <h2 id="game-over-message"></h2>
     <button class="btn" onclick="restartGame()">Race Again</button>
   </div>
 
   <script>
-    // existing JavaScript unchanged
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let score = 0;
+    let lives = 3;
+    let highscore = localStorage.getItem("quizRunnerHighscore") || 0;
+    document.getElementById("highscore").textContent = highscore;
+
+    const ground = 350;
+    const gravity = 1.2;
+    const jumpPower = -15;
+
+    const player = {
+      x: 50,
+      y: ground - 40,
+      width: 40,
+      height: 40,
+      vy: 0,
+      jumping: false,
+      hit: false,
+      hitFrame: 0
+    };
+
+    let obstacles = [];
+    let gameSpeed = 4;
+    let questions = [
+      { question: "Capital of France?", options: ["Paris", "London", "Berlin", "Rome"], answer: "Paris" },
+      { question: "Red Planet?", options: ["Venus", "Earth", "Mars", "Jupiter"], answer: "Mars" },
+      { question: "Largest mammal?", options: ["Elephant", "Shark", "Blue Whale", "Rhino"], answer: "Blue Whale" },
+      { question: "HTML means?", options: ["HyperText Markup Language", "Code", "Structure", "Format"], answer: "HyperText Markup Language" },
+      { question: "Continents?", options: ["5", "6", "7", "8"], answer: "7" },
+      { question: "Deepest ocean?", options: ["Indian", "Pacific", "Arctic", "Atlantic"], answer: "Pacific" },
+      { question: "Photosynthesis gas?", options: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"], answer: "Carbon Dioxide" },
+      { question: "√64?", options: ["6", "8", "7", "9"], answer: "8" },
+      { question: "WW2 End Year?", options: ["1945", "1940", "1939", "1950"], answer: "1945" },
+      { question: "Boiling point of water?", options: ["100°C", "90°C", "80°C", "110°C"], answer: "100°C" }
+    ];
+
+    let usedQuestions = [];
+    let currentQuestion = null;
+    let awaitingAnswer = false;
+    let correctAnswerGiven = false;
+    let gameRunning = false;
+
+    function drawPlayer() {
+      if (player.hit && player.hitFrame < 10) {
+        ctx.fillStyle = player.hitFrame % 2 === 0 ? "#ff0000" : "#ffaaaa";
+        player.hitFrame++;
+      } else {
+        player.hit = false;
+        player.hitFrame = 0;
+        ctx.fillStyle = "#FF6347";
+      }
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    function drawObstacles() {
+      ctx.fillStyle = "#32CD32"; 
+      obstacles.forEach(ob => ctx.fillRect(ob.x, ob.y, ob.width, ob.height));
+    }
+
+    function spawnQuestionWithObstacle() {
+      if (awaitingAnswer || !gameRunning || questions.length === 0) return;
+
+      const index = Math.floor(Math.random() * questions.length);
+      currentQuestion = questions.splice(index, 1)[0];
+      usedQuestions.push(currentQuestion);
+
+      const ob = { x: canvas.width, y: ground, width: 40, height: 50, id: Date.now() };
+      obstacles.push(ob);
+      awaitingAnswer = true;
+      correctAnswerGiven = false;
+
+      document.getElementById("question-box").style.display = "block";
+      document.getElementById("question-text").textContent = currentQuestion.question;
+
+      const optionsDiv = document.getElementById("options");
+      optionsDiv.innerHTML = "";
+      currentQuestion.options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.textContent = opt;
+        btn.className = "option";
+        btn.onclick = () => handleAnswer(opt);
+        optionsDiv.appendChild(btn);
+      });
+
+      setTimeout(() => {
+        if (awaitingAnswer) {
+          awaitingAnswer = false;
+          document.getElementById("question-box").style.display = "none";
+        }
+      }, 10000);
+    }
+
+    setInterval(spawnQuestionWithObstacle, 7000);
+
+    function handleAnswer(selected) {
+      document.getElementById("question-box").style.display = "none";
+      awaitingAnswer = false;
+      if (selected === currentQuestion.answer) {
+        correctAnswerGiven = true;
+        score += 10;  // Increase score for correct answer
+      } else {
+        correctAnswerGiven = false;
+      }
+    }
+
+    function loseLife() {
+      lives--;
+      document.getElementById("lives").textContent = lives;
+      if (lives <= 0) gameOver();
+    }
+
+    function gameOver() {
+      gameRunning = false;
+      if (score > highscore) {
+        localStorage.setItem("quizRunnerHighscore", score);
+        document.getElementById("highscore").textContent = score;
+      }
+      document.getElementById("game-over-message").textContent = "Game Over!";
+      document.getElementById("game-over-box").style.display = "block";
+    }
+
+    function restartGame() {
+      score = 0;
+      lives = 3;
+      gameRunning = true;
+      player.y = ground - player.height;
+      player.jumping = false;
+      obstacles = [];
+      awaitingAnswer = false;
+
+      if (questions.length === 0) questions = [...usedQuestions];
+
+      document.getElementById("score").textContent = score;
+      document.getElementById("lives").textContent = lives;
+      document.getElementById("game-over-box").style.display = "none";
+    }
+
+    function gameLoop() {
+      if (!gameRunning) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);  
+
+      if (player.jumping) {
+        player.vy += gravity;
+        player.y += player.vy;
+        if (player.y >= ground - player.height) {
+          player.y = ground - player.height;
+          player.jumping = false;
+        }
+      }
+
+      drawPlayer();
+      drawObstacles();
+
+      obstacles.forEach(ob => {
+        ob.x -= gameSpeed;
+        if (ob.x + ob.width < 0) obstacles = obstacles.filter(o => o.id !== ob.id);
+        if (ob.x < player.x + player.width && ob.x + ob.width > player.x && ob.y < player.y + player.height && ob.y + ob.height > player.y) loseLife();
+      });
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === " " && !player.jumping) {
+        player.vy = jumpPower;
+        player.jumping = true;
+      }
+    });
+
+    document.getElementById("start-btn").addEventListener("click", () => {
+      gameRunning = true;
+      document.getElementById("start-screen").style.display = "none";
+      gameLoop();
+    });
   </script>
 </body>
 </html>

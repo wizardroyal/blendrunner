@@ -198,7 +198,7 @@
 
     const player = {
       x: 50,
-      y: ground - 40,
+      y: ground - 40, // Adjusted character's position near the floor
       width: 40,
       height: 40,
       vy: 0,
@@ -276,11 +276,15 @@
         if (awaitingAnswer) {
           awaitingAnswer = false;
           document.getElementById("question-box").style.display = "none";
+          // If not answered or wrong, player crashes into the obstacle
+          if (!correctAnswerGiven) {
+            loseLife(true);
+          }
         }
-      }, 10000);
+      }, 10000); // Question shows for 10 seconds
     }
 
-    setInterval(spawnQuestionWithObstacle, 7000);
+    setInterval(spawnQuestionWithObstacle, 7000); // Spawn question every 7 seconds
 
     function handleAnswer(selected) {
       document.getElementById("question-box").style.display = "none";
@@ -381,6 +385,12 @@
         // Check for collision with player
         if (ob.x < player.x + player.width && ob.x + ob.width > player.x && ob.y < player.y + player.height && ob.y + ob.height > player.y) {
           loseLife(true);
+        }
+
+        // If player answers correctly and is supposed to jump
+        if (canJump && ob.x === player.x + player.width) {
+          player.vy = jumpPower;
+          player.jumping = true;
         }
       });
 

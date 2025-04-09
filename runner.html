@@ -98,9 +98,13 @@
     let highscore = localStorage.getItem("quizRunnerHighscore") || 0;
     document.getElementById("highscore").textContent = highscore;
 
+    const ground = 350;
+    const gravity = 1.2;
+    const jumpPower = -15;
+
     const player = {
       x: 50,
-      y: 300,
+      y: ground - 40,
       width: 40,
       height: 40,
       vy: 0,
@@ -109,14 +113,10 @@
       hitFrame: 0
     };
 
-    const ground = 350;
-    const gravity = 1.2;
-    const jumpPower = -15;
-
     let obstacles = [];
     let gameSpeed = 4;
 
-    const questions = [
+    let questions = [
       { question: "Capital of France?", options: ["Paris", "London", "Berlin", "Rome"], answer: "Paris" },
       { question: "Red Planet?", options: ["Venus", "Earth", "Mars", "Jupiter"], answer: "Mars" },
       { question: "Largest mammal?", options: ["Elephant", "Shark", "Blue Whale", "Rhino"], answer: "Blue Whale" },
@@ -129,6 +129,7 @@
       { question: "Boiling point of water?", options: ["100°C", "90°C", "80°C", "110°C"], answer: "100°C" }
     ];
 
+    let usedQuestions = [];
     let currentQuestion = null;
     let awaitingAnswer = false;
     let currentObstacle = null;
@@ -155,9 +156,12 @@
     }
 
     function spawnQuestionWithObstacle() {
-      if (awaitingAnswer || !gameRunning) return;
+      if (awaitingAnswer || !gameRunning || questions.length === 0) return;
 
-      currentQuestion = questions[Math.floor(Math.random() * questions.length)];
+      const index = Math.floor(Math.random() * questions.length);
+      currentQuestion = questions.splice(index, 1)[0];
+      usedQuestions.push(currentQuestion); // Add question to usedQuestions
+
       const ob = { x: canvas.width, y: ground, width: 40, height: 50, id: Date.now() };
       obstacles.push(ob);
       currentObstacle = ob;
@@ -193,7 +197,7 @@
       if (selected === currentQuestion.answer) {
         correctAnswerGiven = true;
       } else {
-        loseLife(true);
+        correctAnswerGiven = false;
       }
     }
 
@@ -223,12 +227,18 @@
       score = 0;
       lives = 3;
       gameRunning = true;
-      player.y = ground;
+      player.y = ground - player.height;
       player.jumping = false;
       obstacles = [];
       awaitingAnswer = false;
       currentObstacle = null;
       correctAnswerGiven = false;
+
+      // Refill questions from usedQuestions
+      if (questions.length === 0) {
+        questions = [...usedQuestions];
+        usedQuestions = [];
+      }
 
       document.getElementById("score").textContent = score;
       document.getElementById("lives").textContent = lives;
@@ -245,8 +255,8 @@
       if (player.jumping) {
         player.vy += gravity;
         player.y += player.vy;
-        if (player.y >= ground) {
-          player.y = ground;
+        if (player.y >= ground - player.height) {
+          player.y = ground - player.height;
           player.jumping = false;
           player.vy = 0;
         }
@@ -260,15 +270,13 @@
         if (currentObstacle.x <= player.x + player.width &&
             currentObstacle.x + currentObstacle.width > player.x) {
           if (correctAnswerGiven && !player.jumping) {
-            // Jump!
             player.vy = jumpPower;
             player.jumping = true;
             score += 10;
             document.getElementById("score").textContent = score;
             correctAnswerGiven = false;
             currentObstacle = null;
-          } else if (!player.jumping && !player.hit) {
-            // Hit obstacle
+          } else if (!correctAnswerGiven && !player.jumping && !player.hit) {
             loseLife(true);
             currentObstacle = null;
           }
@@ -284,7 +292,7 @@
       requestAnimationFrame(update);
     }
 
-    update(); // Start game loop
+    update();
   </script>
 </body>
 </html>

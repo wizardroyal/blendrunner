@@ -22,7 +22,7 @@
       background: #87CEEB; /* Sky blue background */
       border: 2px solid #000;
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-      display: block;
+      display: none; /* Hide canvas initially */
       margin-bottom: 20px;
     }
 
@@ -111,31 +111,30 @@
       background: #ff4500;
     }
 
-    /* Smooth character and obstacle animations */
-    @keyframes smoothMove {
-      0% {
-        transform: translateY(0);
-      }
-      50% {
-        transform: translateY(-10px);
-      }
-      100% {
-        transform: translateY(0);
-      }
+    #start-btn {
+      background: #32CD32;
+      color: white;
+      font-size: 22px;
+      padding: 15px 30px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
     }
 
-    .animated {
-      animation: smoothMove 0.4s ease-in-out infinite;
+    #start-btn:hover {
+      background: #228B22;
     }
 
   </style>
 </head>
 <body>
-  <div id="question-box">
-    <h3 id="question-text"></h3>
-    <div id="options"></div>
+  <!-- Start Screen -->
+  <div id="start-screen">
+    <h1>Welcome to Quiz Runner</h1>
+    <button id="start-btn" class="btn">Start Game</button>
   </div>
 
+  <!-- Game Canvas and Scoreboard -->
   <div id="scoreboard">
     <div>Score: <span id="score">0</span></div>
     <div>Lives: <span id="lives">3</span></div>
@@ -147,6 +146,11 @@
   <div id="game-over-box">
     <h2 id="game-over-message"></h2>
     <button class="btn" onclick="restartGame()">Race Again</button>
+  </div>
+
+  <div id="question-box">
+    <h3 id="question-text"></h3>
+    <div id="options"></div>
   </div>
 
   <script>
@@ -193,7 +197,20 @@
     let awaitingAnswer = false;
     let currentObstacle = null;
     let correctAnswerGiven = false;
-    let gameRunning = true;
+    let gameRunning = false;
+
+    // Start the game
+    function startGame() {
+      gameRunning = true;
+      score = 0;
+      lives = 3;
+      document.getElementById("score").textContent = score;
+      document.getElementById("lives").textContent = lives;
+      document.getElementById("start-screen").style.display = "none";
+      document.getElementById("gameCanvas").style.display = "block";
+      gameLoop();
+      spawnQuestionWithObstacle();
+    }
 
     // Draw the player character with animation
     function drawPlayer() {
@@ -234,4 +251,119 @@
       document.getElementById("question-text").textContent = currentQuestion.question;
 
       const optionsDiv = document.getElementById("options");
-     
+      optionsDiv.innerHTML = "";
+      currentQuestion.options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.textContent = opt;
+        btn.className = "option";
+        btn.onclick = () => handleAnswer(opt);
+        optionsDiv.appendChild(btn);
+      });
+
+      setTimeout(() => {
+        if (awaitingAnswer) {
+          awaitingAnswer = false;
+          document.getElementById("question-box").style.display = "none";
+          loseLife(); // Handle the failed question scenario
+        }
+      }, 10000); // 10 seconds to answer
+    }
+
+    // Handle user answer
+    function handleAnswer(selected) {
+      document.getElementById("question-box").style.display = "none";
+      awaitingAnswer = false;
+      if (selected === currentQuestion.answer) {
+        correctAnswerGiven = true;
+        // Player jumps over the obstacle
+        player.y = ground - player.height - 20; // Adjust for jump
+        setTimeout(() => {
+          player.y = ground - player.height;
+        }, 500);
+      } else {
+        correctAnswerGiven = false;
+        loseLife(true); // Handle collision on incorrect answer
+      }
+    }
+
+    // Lose life and check for game over
+    function loseLife(withAnimation = false) {
+      lives--;
+      document.getElementById("lives").textContent = lives;
+      if (withAnimation) {
+        player.hit = true;
+        player.hitFrame = 0;
+      }
+      if (lives <= 0) {
+        gameOver();
+      }
+    }
+
+    // Game Over screen
+    function gameOver() {
+      gameRunning = false;
+      if (score > highscore) {
+        localStorage.setItem("quizRunnerHighscore", score);
+      }
+      document.getElementById("game-over-message").textContent = "Game Over! Try again.";
+      document.getElementById("game-over-box").style.display = "block";
+    }
+
+    // Restart the game
+    function restartGame() {
+      score = 0;
+      lives = 3;
+      gameRunning = true;
+      player.y = ground - player.height;
+      player.jumping = false;
+      obstacles = [];
+      awaitingAnswer = false;
+      correctAnswerGiven = false;
+
+      if (questions.length === 0) {
+        questions = [...usedQuestions];
+        usedQuestions = [];
+      }
+
+      document.getElementById("score").textContent = score;
+      document.getElementById("lives").textContent = lives;
+      document.getElementById("game-over-box").style.display = "none";
+      gameLoop();
+      spawnQuestionWithObstacle();
+    }
+
+    // Game loop function
+    function gameLoop() {
+      if (!gameRunning) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas for next frame
+      drawPlayer();
+      drawObstacles();
+
+      // Update obstacle positions
+      obstacles.forEach(ob => {
+        ob.x -= gameSpeed;
+        if (ob.x + ob.width < 0) {
+          obstacles = obstacles.filter(o => o.id !== ob.id); // Remove obstacles that go off-screen
+        }
+
+        // Check for collision
+        if (
+          player.x < ob.x + ob.width &&
+          player.x + player.width > ob.x &&
+          player.y + player.height > ob.y
+        ) {
+          if (!correctAnswerGiven) {
+            loseLife(true); // Collision with obstacle
+          }
+        }
+      });
+
+      requestAnimationFrame(gameLoop); // Keep the game running by requesting another frame
+    }
+
+    // Event listener to start the game
+    document.getElementById("start-btn").addEventListener("click", startGame);
+  </script>
+</body>
+</html>

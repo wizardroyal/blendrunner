@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Runner</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Arial', sans-serif; background: #cceeff; overflow: hidden; }
+    canvas { background: #87ceeb; display: block; margin: 0 auto; border: 3px solid #222; }
+    #question-box {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+    #question-box h3 { margin-bottom: 10px; }
+    .option {
+      display: block;
+      margin: 4px 0;
+      padding: 8px;
+      background: #eee;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .option:hover {
+      background-color: #ddd;
+    }
+    #scoreboard {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255,255,255,0.8);
+      padding: 10px;
+      border-radius: 6px;
+    }
+    #game-over-box {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      display: none;
+    }
+    .btn {
+      background: #f44336;
+      color: white;
+      padding: 12px 24px;
+      font-size: 18px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .btn:hover {
+      background: #d32f2f;
+    }
+  </style>
+</head>
+<body>
+  <div id="question-box" style="display: none;">
+    <h3 id="question-text"></h3>
+    <div id="options"></div>
+  </div>
+  <div id="scoreboard">
+    <div>Score: <span id="score">0</span></div>
+    <div>Lives: <span id="lives">3</span></div>
+    <div>High Score: <span id="highscore">0</span></div>
+  </div>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+  <div id="game-over-box">
+    <h2 id="game-over-message"></h2>
+    <button class="btn" onclick="restartGame()">Race Again</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let score = 0;
+    let lives = 3;
+    let highscore = localStorage.getItem("quizRunnerHighscore") || 0;
+    document.getElementById("highscore").textContent = highscore;
+
+    const player = {
+      x: 50,
+      y: 300,
+      width: 40,
+      height: 40,
+      vy: 0,
+      jumping: false,
+      hit: false,
+      hitFrame: 0,
+      canJump: false
+    };
+
+    const ground = 350;
+    const gravity = 1.2;
+    const jumpPower = -15;
+
+    let obstacles = [];
+    let gameSpeed = 4;
+
+    const questions = [
+      { question: "Capital of France?", options: ["Paris", "London", "Berlin", "Rome"], answer: "Paris" },
+      { question: "Red Planet?", options: ["Venus", "Earth", "Mars", "Jupiter"], answer: "Mars" },
+      { question: "Largest mammal?", options: ["Elephant", "Shark", "Blue Whale", "Rhino"], answer: "Blue Whale" },
+      { question: "HTML means?", options: ["HyperText Markup Language", "Code", "Structure", "Format"], answer: "HyperText Markup Language" },
+      { question: "Continents?", options: ["5", "6", "7", "8"], answer: "7" },
+      { question: "Deepest ocean?", options: ["Indian", "Pacific", "Arctic", "Atlantic"], answer: "Pacific" },
+      { question: "Photosynthesis gas?", options: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"], answer: "Carbon Dioxide" },
+      { question: "√64?", options: ["6", "8", "7", "9"], answer: "8" },
+      { question: "WW2 End Year?", options: ["1945", "1940", "1939", "1950"], answer: "1945" },
+      { question: "Boiling point of water?", options: ["100°C", "90°C", "80°C", "110°C"], answer: "100°C" }
+    ];
+
+    let currentQuestion = null;
+    let awaitingAnswer = false;
+    let currentObstacle = null;
+    let correctAnswerGiven = false;
+
+    function drawPlayer() {
+      if (player.hit && player.hitFrame < 10) {
+        ctx.fillStyle = player.hitFrame % 2 === 0 ? "#ff0000" : "#ffaaaa";
+        player.hitFrame++;
+      } else {
+        player.hit = false;
+        player.hitFrame = 0;
+        ctx.fillStyle = "red";
+      }
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    function drawObstacles() {
+      ctx.fillStyle = "green";
+      obstacles.forEach(ob => {
+        ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
+      });
+    }
+
+    function spawnQuestionWithObstacle() {
+      if (awaitingAnswer) return;
+
+      currentQuestion = questions[Math.floor(Math.random() * questions.length)];
+      const ob = { x: canvas.width, y: ground, width: 40, height: 50, id: Date.now() };
+      obstacles.push(ob);
+      currentObstacle = ob;
+      awaitingAnswer = true;
+      correctAnswerGiven = false;
+
+      document.getElementById("question-box").style.display = "block";
+      document.getElementById("question-text").textContent = currentQuestion.question;
+
+      const optionsDiv = document.getElementById("options");
+      optionsDiv.innerHTML = "";
+      currentQuestion.options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.textContent = opt;
+        btn.className = "option";
+        btn.onclick = () => handleAnswer(opt);
+        optionsDiv.appendChild(btn);
+      });
+
+      setTimeout(() => {
+        if (awaitingAnswer) {
+          awaitingAnswer = false;
+          document.getElementById("question-box").style.display = "none";
+        }
+      }, 10000);
+    }
+
+    setInterval(spawnQuestionWithObstacle, 7000);
+
+    function handleAnswer(selected) {
+      document.getElementById("question-box").style.display = "none";
+      awaitingAnswer = false;
+      if (selected === currentQuestion.answer) {
+        correctAnswerGiven = true;
+      } else {
+        loseLife(true);
+      }
+    }
+
+    function loseLife(withAnimation = false) {
+      lives--;
+      document.getElementById("lives").textContent = lives;
+      if (withAnimation) {
+        player.hit = true;
+        player.hitFrame = 0;
+      }
+      if (lives <= 0) {
+        gameOver(false);
+      }
+    }
+
+    function gameOver(playerWon) {
+      if (score > highscore) {
+        localStorage.setItem("quizRunnerHighscore", score);
+      }
+      const gameOverMessage = playerWon ? "You are worthy to be a BlendRunner" : "Sorry your wheels fell off";
+      document.getElementById("game-over-message").textContent = gameOverMessage;
+      document.getElementById("game-over-box").style.display = "block";
+    }
+
+    function restartGame() {
+      score = 0;
+      lives = 3;
+      document.getElementById("score").textContent = score;
+      document.getElementById("lives").textContent = lives;
+      obstacles = [];
+      document.getElementById("game-over-box").style.display = "none";
+      update();
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Player Physics
+      if (player.jumping) {
+        player.vy += gravity;
+        player.y += player.vy;
+        if (player.y >= ground) {
+          player.y = ground;
+          player.jumping = false;
+          player.vy = 0;
+        }
+      }
+
+      // Move Obstacles
+      obstacles.forEach(ob => ob.x -= gameSpeed);
+
+      // Check unanswered and collision
+      if (awaitingAnswer && currentObstacle && currentObstacle.x < player.x + player.width) {
+        awaitingAnswer = false;
+        document.getElementById("game-over-box").style.display = "block";
+        document.getElementById("game-over-message").textContent = "Sorry your wheels fell off";
+      }
+
+      // Draw everything
+      drawPlayer();
+      drawObstacles();
+    }
+
+    setInterval(update, 1000 / 60); // Game loop
+
+  </script>
+</body>
+</html>

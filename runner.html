@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Quiz Runner</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Arial', sans-serif; background: #cceeff; overflow: hidden; }
     canvas { background: #87ceeb; display: block; margin: 0 auto; border: 3px solid #222; }
+
     #question-box {
       position: absolute;
       top: 20px;
@@ -19,6 +20,7 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
       z-index: 10;
     }
+
     #question-box h3 { margin-bottom: 10px; }
     .option {
       display: block;
@@ -29,9 +31,9 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    .option:hover {
-      background-color: #ddd;
-    }
+
+    .option:hover { background-color: #ddd; }
+
     #scoreboard {
       position: absolute;
       top: 10px;
@@ -40,6 +42,7 @@
       padding: 10px;
       border-radius: 6px;
     }
+
     #game-over-box {
       position: absolute;
       top: 50%;
@@ -52,6 +55,7 @@
       text-align: center;
       display: none;
     }
+
     .btn {
       background: #f44336;
       color: white;
@@ -62,9 +66,8 @@
       cursor: pointer;
       margin-top: 10px;
     }
-    .btn:hover {
-      background: #d32f2f;
-    }
+
+    .btn:hover { background: #d32f2f; }
   </style>
 </head>
 <body>
@@ -72,12 +75,15 @@
     <h3 id="question-text"></h3>
     <div id="options"></div>
   </div>
+
   <div id="scoreboard">
     <div>Score: <span id="score">0</span></div>
     <div>Lives: <span id="lives">3</span></div>
     <div>High Score: <span id="highscore">0</span></div>
   </div>
+
   <canvas id="gameCanvas" width="800" height="400"></canvas>
+
   <div id="game-over-box">
     <h2 id="game-over-message"></h2>
     <button class="btn" onclick="restartGame()">Race Again</button>
@@ -100,8 +106,7 @@
       vy: 0,
       jumping: false,
       hit: false,
-      hitFrame: 0,
-      canJump: false
+      hitFrame: 0
     };
 
     const ground = 350;
@@ -128,6 +133,7 @@
     let awaitingAnswer = false;
     let currentObstacle = null;
     let correctAnswerGiven = false;
+    let gameRunning = true;
 
     function drawPlayer() {
       if (player.hit && player.hitFrame < 10) {
@@ -149,7 +155,7 @@
     }
 
     function spawnQuestionWithObstacle() {
-      if (awaitingAnswer) return;
+      if (awaitingAnswer || !gameRunning) return;
 
       currentQuestion = questions[Math.floor(Math.random() * questions.length)];
       const ob = { x: canvas.width, y: ground, width: 40, height: 50, id: Date.now() };
@@ -204,28 +210,38 @@
     }
 
     function gameOver(playerWon) {
+      gameRunning = false;
       if (score > highscore) {
         localStorage.setItem("quizRunnerHighscore", score);
       }
-      const gameOverMessage = playerWon ? "You are worthy to be a BlendRunner" : "Sorry your wheels fell off";
-      document.getElementById("game-over-message").textContent = gameOverMessage;
+      const message = playerWon ? "You are worthy to be a BlendRunner" : "Sorry your wheels fell off";
+      document.getElementById("game-over-message").textContent = message;
       document.getElementById("game-over-box").style.display = "block";
     }
 
     function restartGame() {
       score = 0;
       lives = 3;
+      gameRunning = true;
+      player.y = ground;
+      player.jumping = false;
+      obstacles = [];
+      awaitingAnswer = false;
+      currentObstacle = null;
+      correctAnswerGiven = false;
+
       document.getElementById("score").textContent = score;
       document.getElementById("lives").textContent = lives;
-      obstacles = [];
       document.getElementById("game-over-box").style.display = "none";
       update();
     }
 
     function update() {
+      if (!gameRunning) return;
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Player Physics
+      // Player physics
       if (player.jumping) {
         player.vy += gravity;
         player.y += player.vy;
@@ -236,23 +252,39 @@
         }
       }
 
-      // Move Obstacles
+      // Move obstacles
       obstacles.forEach(ob => ob.x -= gameSpeed);
 
-      // Check unanswered and collision
-      if (awaitingAnswer && currentObstacle && currentObstacle.x < player.x + player.width) {
-        awaitingAnswer = false;
-        document.getElementById("game-over-box").style.display = "block";
-        document.getElementById("game-over-message").textContent = "Sorry your wheels fell off";
+      // Check for collision
+      if (currentObstacle) {
+        if (currentObstacle.x <= player.x + player.width &&
+            currentObstacle.x + currentObstacle.width > player.x) {
+          if (correctAnswerGiven && !player.jumping) {
+            // Jump!
+            player.vy = jumpPower;
+            player.jumping = true;
+            score += 10;
+            document.getElementById("score").textContent = score;
+            correctAnswerGiven = false;
+            currentObstacle = null;
+          } else if (!player.jumping && !player.hit) {
+            // Hit obstacle
+            loseLife(true);
+            currentObstacle = null;
+          }
+        }
       }
 
-      // Draw everything
+      // Remove off-screen obstacles
+      obstacles = obstacles.filter(ob => ob.x + ob.width > 0);
+
       drawPlayer();
       drawObstacles();
+
+      requestAnimationFrame(update);
     }
 
-    setInterval(update, 1000 / 60); // Game loop
-
+    update(); // Start game loop
   </script>
 </body>
 </html>

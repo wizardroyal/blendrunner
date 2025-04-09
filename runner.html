@@ -152,7 +152,6 @@
   </style>
 </head>
 <body>
-  <!-- Start Screen -->
   <div id="start-screen">
     <div class="start-content">
       <h1>Welcome to Quiz Runner</h1>
@@ -160,23 +159,16 @@
     </div>
   </div>
 
-  <!-- Game Canvas -->
   <canvas id="gameCanvas" width="800" height="400"></canvas>
-
-  <!-- Question Box -->
   <div id="question-box">
     <h3 id="question-text"></h3>
     <div id="options"></div>
   </div>
-
-  <!-- Scoreboard -->
   <div id="scoreboard">
     <div>Score: <span id="score">0</span></div>
     <div>Lives: <span id="lives">3</span></div>
     <div>High Score: <span id="highscore">0</span></div>
   </div>
-
-  <!-- Game Over Box -->
   <div id="game-over-box">
     <h2 id="game-over-message"></h2>
     <button class="btn" onclick="restartGame()">Race Again</button>
@@ -195,20 +187,18 @@
     const ground = 350;
     const gravity = 1.2;
     const jumpPower = -15;
+    const gameSpeed = 4;
 
     const player = {
       x: 50,
-      y: ground - 40, // Adjusted character's position near the floor
+      y: ground - 40,
       width: 40,
       height: 40,
       vy: 0,
-      jumping: false,
-      hit: false,
-      hitFrame: 0
+      jumping: false
     };
 
     let obstacles = [];
-    let gameSpeed = 4;
     let questions = [
       { question: "Capital of France?", options: ["Paris", "London", "Berlin", "Rome"], answer: "Paris" },
       { question: "Red Planet?", options: ["Venus", "Earth", "Mars", "Jupiter"], answer: "Mars" },
@@ -225,43 +215,41 @@
     let usedQuestions = [];
     let currentQuestion = null;
     let awaitingAnswer = false;
-    let currentObstacle = null;
     let correctAnswerGiven = false;
-    let gameRunning = true;
-    let canJump = false;
 
-    // Draw the player character with animation
     function drawPlayer() {
-      ctx.fillStyle = "#FF6347"; // Tomato red color
+      ctx.fillStyle = "#FF6347";
       ctx.fillRect(player.x, player.y, player.width, player.height);
     }
 
-    // Draw obstacles
     function drawObstacles() {
-      ctx.fillStyle = "#32CD32"; // Lime Green
-      obstacles.forEach(ob => {
-        ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
-      });
+      ctx.fillStyle = "#32CD32";
+      obstacles.forEach(ob => ctx.fillRect(ob.x, ob.y, ob.width, ob.height));
     }
 
-    // Function to spawn a new question with an obstacle
     function spawnQuestionWithObstacle() {
-      if (awaitingAnswer || !gameRunning || questions.length === 0) return;
-
+      if (awaitingAnswer || questions.length === 0) return;
       const index = Math.floor(Math.random() * questions.length);
       currentQuestion = questions.splice(index, 1)[0];
-      usedQuestions.push(currentQuestion); // Add question to usedQuestions
+      usedQuestions.push(currentQuestion);
 
-      const ob = { x: canvas.width, y: ground, width: 40, height: 50, id: Date.now() };
+      const timeUntilImpact = 10000;
+      const distanceToPlayer = gameSpeed * (timeUntilImpact / 16);
+      const ob = {
+        x: player.x + player.width + distanceToPlayer,
+        y: ground - 60,
+        width: 40,
+        height: 60,
+        id: Date.now(),
+        triggerTime: Date.now() + timeUntilImpact
+      };
+
       obstacles.push(ob);
-      currentObstacle = ob;
       awaitingAnswer = true;
       correctAnswerGiven = false;
-      canJump = false;
 
       document.getElementById("question-box").style.display = "block";
       document.getElementById("question-text").textContent = currentQuestion.question;
-
       const optionsDiv = document.getElementById("options");
       optionsDiv.innerHTML = "";
       currentQuestion.options.forEach(opt => {
@@ -276,93 +264,48 @@
         if (awaitingAnswer) {
           awaitingAnswer = false;
           document.getElementById("question-box").style.display = "none";
-          // If not answered or wrong, player crashes into the obstacle
-          if (!correctAnswerGiven) {
-            loseLife(true);
-          }
+          correctAnswerGiven = false;
         }
-      }, 10000); // Question shows for 10 seconds
+      }, timeUntilImpact);
     }
-
-    setInterval(spawnQuestionWithObstacle, 7000); // Spawn question every 7 seconds
 
     function handleAnswer(selected) {
       document.getElementById("question-box").style.display = "none";
       awaitingAnswer = false;
-      if (selected === currentQuestion.answer) {
-        correctAnswerGiven = true;
-        canJump = true;
-      } else {
-        canJump = false;
-      }
+      correctAnswerGiven = selected === currentQuestion.answer;
     }
 
-    // Lose life and check for game over
-    function loseLife(withAnimation = false) {
+    function loseLife() {
       lives--;
       document.getElementById("lives").textContent = lives;
-      if (withAnimation) {
-        player.hit = true;
-        player.hitFrame = 0;
-      }
-      if (lives <= 0) {
-        gameOver(false);
-      }
+      if (lives <= 0) gameOver();
     }
 
-    // Game Over screen
-    function gameOver(playerWon) {
-      gameRunning = false;
-      if (questions.length === 0 && lives > 0) {
-        document.getElementById("game-over-message").textContent = "Congratulations! You've completed the quiz!";
-      } else {
-        if (score > highscore) {
-          localStorage.setItem("quizRunnerHighscore", score);
-        }
-        const message = playerWon ? "You are worthy to be a BlendRunner" : "Sorry, your wheels fell off";
-        document.getElementById("game-over-message").textContent = message;
-      }
+    function gameOver() {
+      if (score > highscore) localStorage.setItem("quizRunnerHighscore", score);
+      document.getElementById("game-over-message").textContent = lives <= 0 ? "Game Over" : "You Win!";
       document.getElementById("game-over-box").style.display = "block";
     }
 
-    // Restart the game
     function restartGame() {
       score = 0;
       lives = 3;
-      gameRunning = true;
-      player.y = ground - player.height;
-      player.jumping = false;
       obstacles = [];
-      awaitingAnswer = false;
-      currentObstacle = null;
-      correctAnswerGiven = false;
-      canJump = false;
-
-      // Refill questions from usedQuestions
-      if (questions.length === 0) {
-        questions = [...usedQuestions];
-        usedQuestions = [];
-      }
-
+      questions = [...usedQuestions];
+      usedQuestions = [];
       document.getElementById("score").textContent = score;
       document.getElementById("lives").textContent = lives;
       document.getElementById("game-over-box").style.display = "none";
     }
 
-    // Quit to start screen
     function quitGame() {
       document.getElementById("start-screen").style.display = "flex";
       document.getElementById("game-over-box").style.display = "none";
-      gameRunning = false;
     }
 
-    // Game loop function
     function gameLoop() {
-      if (!gameRunning) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear canvas for next frame
-
-      // Gravity and Jumping Logic
       if (player.jumping) {
         player.vy += gravity;
         player.y += player.vy;
@@ -375,42 +318,37 @@
       drawPlayer();
       drawObstacles();
 
-      // Update obstacle positions and collision detection
       obstacles.forEach(ob => {
         ob.x -= gameSpeed;
         if (ob.x + ob.width < 0) {
-          obstacles = obstacles.filter(o => o.id !== ob.id);  // Remove obstacles that go off-screen
+          obstacles = obstacles.filter(o => o.id !== ob.id);
+          return;
         }
 
-        // Check for collision with player
-        if (ob.x < player.x + player.width && ob.x + ob.width > player.x && ob.y < player.y + player.height && ob.y + ob.height > player.y) {
-          loseLife(true);
+        const isCollision = ob.x < player.x + player.width &&
+                            ob.x + ob.width > player.x &&
+                            ob.y < player.y + player.height &&
+                            ob.y + ob.height > player.y;
+
+        if (isCollision) {
+          loseLife();
+          obstacles = obstacles.filter(o => o.id !== ob.id);
+          return;
         }
 
-        // If player answers correctly and is supposed to jump
-        if (canJump && ob.x === player.x + player.width) {
+        const timeToImpact = ob.triggerTime - Date.now();
+        if (timeToImpact <= 50 && correctAnswerGiven && !player.jumping) {
           player.vy = jumpPower;
           player.jumping = true;
         }
       });
 
-      requestAnimationFrame(gameLoop);  // Keep the game running by requesting another frame
+      requestAnimationFrame(gameLoop);
     }
 
-    gameLoop();  // Start the game loop
-
-    // Event listener for jumping
-    window.addEventListener("keydown", (e) => {
-      if (e.key === " " && !player.jumping && canJump) {  // Spacebar to jump
-        player.vy = jumpPower;
-        player.jumping = true;
-      }
-    });
-
-    // Start Game Button
     document.getElementById("start-btn").addEventListener("click", () => {
       document.getElementById("start-screen").style.display = "none";
-      gameRunning = true;
+      setInterval(spawnQuestionWithObstacle, 7000);
       gameLoop();
     });
   </script>

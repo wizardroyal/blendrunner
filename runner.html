@@ -199,14 +199,29 @@
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear canvas for next frame
 
+      // Gravity and Jumping Logic
+      if (player.jumping) {
+        player.vy += gravity;
+        player.y += player.vy;
+        if (player.y >= ground - player.height) {
+          player.y = ground - player.height;
+          player.jumping = false;
+        }
+      }
+
       drawPlayer();
       drawObstacles();
 
-      // Update obstacle positions
+      // Update obstacle positions and collision detection
       obstacles.forEach(ob => {
         ob.x -= gameSpeed;
         if (ob.x + ob.width < 0) {
           obstacles = obstacles.filter(o => o.id !== ob.id);  // Remove obstacles that go off-screen
+        }
+
+        // Check for collision with player
+        if (ob.x < player.x + player.width && ob.x + ob.width > player.x && ob.y < player.y + player.height && ob.y + ob.height > player.y) {
+          loseLife(true);
         }
       });
 
@@ -215,6 +230,13 @@
 
     gameLoop();  // Start the game loop
 
+    // Event listener for jumping
+    window.addEventListener("keydown", (e) => {
+      if (e.key === " " && !player.jumping) {  // Spacebar to jump
+        player.vy = jumpPower;
+        player.jumping = true;
+      }
+    });
   </script>
 </body>
 </html>

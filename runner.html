@@ -199,8 +199,8 @@
     const player = {
       x: 100,
       y: 300,
-      width: 20,
-      height: 20,  // Reduced height
+      width: 40,
+      height: 40,  // Reduced height
       vy: 0,
       gravity: 1.5,
       jumpStrength: -18,
@@ -271,7 +271,6 @@
           score += 100;
           correctStreak = 0; // reset streak
         }
-        player.jump();
         score += 10;
         document.getElementById("score").textContent = score;
       } else {
@@ -318,7 +317,6 @@
       player.update();
       player.draw();
       updateObstacle();
-      drawObstacle();
       requestAnimationFrame(gameLoop);
     }
 
@@ -352,6 +350,13 @@
       }, 5000);
       gameLoop();
     });
+
+    // Allow the character to jump only when the obstacle is in front of him
+    setInterval(() => {
+      if (obstacle && obstacle.x < player.x + player.width && player.grounded) {
+        player.jump();
+      }
+    }, 100); // Check periodically
   </script>
 </body>
 </html>

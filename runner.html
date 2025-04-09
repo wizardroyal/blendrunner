@@ -5,11 +5,133 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Quiz Runner</title>
   <style>
-    /* Same styles as before */
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f0f0f0;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    #gameCanvas {
+      background: #87CEEB; /* Sky blue background */
+      border: 2px solid #000;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+      display: block;
+      margin-bottom: 20px;
+    }
+
+    #scoreboard {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      max-width: 600px;
+      margin: 20px 0;
+    }
+
+    #scoreboard div {
+      font-size: 18px;
+      font-weight: bold;
+      background: #fff;
+      padding: 10px 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    #question-box {
+      display: none;
+      position: absolute;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.7);
+      padding: 20px;
+      border-radius: 8px;
+      color: white;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+    }
+
+    #question-text {
+      font-size: 20px;
+      margin-bottom: 15px;
+    }
+
+    .option {
+      background: #32CD32;
+      color: white;
+      border: none;
+      padding: 10px;
+      margin: 5px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .option:hover {
+      background: #228B22;
+    }
+
+    #game-over-box {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      padding: 40px;
+      text-align: center;
+      color: white;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+    }
+
+    #game-over-message {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      background: #ff6347;
+      color: white;
+      font-size: 18px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn:hover {
+      background: #ff4500;
+    }
+
+    /* Smooth character and obstacle animations */
+    @keyframes smoothMove {
+      0% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+      100% {
+        transform: translateY(0);
+      }
+    }
+
+    .animated {
+      animation: smoothMove 0.4s ease-in-out infinite;
+    }
+
   </style>
 </head>
 <body>
-  <div id="question-box" style="display: none;">
+  <div id="question-box">
     <h3 id="question-text"></h3>
     <div id="options"></div>
   </div>
@@ -73,7 +195,7 @@
     let correctAnswerGiven = false;
     let gameRunning = true;
 
-    // Draw the player character
+    // Draw the player character with animation
     function drawPlayer() {
       if (player.hit && player.hitFrame < 10) {
         ctx.fillStyle = player.hitFrame % 2 === 0 ? "#ff0000" : "#ffaaaa";
@@ -81,14 +203,14 @@
       } else {
         player.hit = false;
         player.hitFrame = 0;
-        ctx.fillStyle = "red";
+        ctx.fillStyle = "#FF6347"; // Tomato red color
       }
       ctx.fillRect(player.x, player.y, player.width, player.height);
     }
 
     // Draw obstacles
     function drawObstacles() {
-      ctx.fillStyle = "green";
+      ctx.fillStyle = "#32CD32"; // Lime Green
       obstacles.forEach(ob => {
         ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
       });
@@ -116,7 +238,7 @@
       currentQuestion.options.forEach(opt => {
         const btn = document.createElement("button");
         btn.textContent = opt;
-        btn.className = "option";
+        btn.className = "option animated";  // Add animation to options
         btn.onclick = () => handleAnswer(opt);
         optionsDiv.appendChild(btn);
       });
@@ -158,7 +280,6 @@
     function gameOver(playerWon) {
       gameRunning = false;
       if (questions.length === 0 && lives > 0) {
-        // Player answered all questions correctly and still has lives left
         document.getElementById("game-over-message").textContent = "Congratulations! You've completed the quiz!";
       } else {
         if (score > highscore) {

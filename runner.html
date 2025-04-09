@@ -6,155 +6,142 @@
   <title>Quiz Runner</title>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
       margin: 0;
-      padding: 0;
-      background: #f0f0f0;
-      color: #333;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      flex-direction: column;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #e6f7ff;
+      overflow: hidden;
     }
 
     #gameCanvas {
-      background: #87CEEB; /* Sky blue background */
-      border: 2px solid #000;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-      display: none; /* Hide canvas initially */
-      margin-bottom: 20px;
+      display: block;
+      margin: 0 auto;
+      background: linear-gradient(to top, #87ceeb, #ffffff);
+      border: 3px solid #4CAF50;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
     }
 
     #scoreboard {
-      display: none; /* Hide scoreboard initially */
-      justify-content: space-around;
-      width: 100%;
-      max-width: 600px;
-      margin: 20px 0;
-    }
-
-    #scoreboard div {
-      font-size: 18px;
-      font-weight: bold;
-      background: #fff;
-      padding: 10px 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      margin: 10px auto;
+      font-size: 20px;
+      color: #333;
+      display: none;
     }
 
     #question-box {
-      display: none;
-      position: absolute;
-      top: 10%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.7);
+      background: #ffffffee;
+      border: 2px solid #4CAF50;
+      border-radius: 10px;
       padding: 20px;
-      border-radius: 8px;
-      color: white;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
-    }
-
-    #question-text {
-      font-size: 20px;
-      margin-bottom: 15px;
+      width: 300px;
+      margin: 20px auto;
+      text-align: center;
+      display: none;
     }
 
     .option {
-      background: #32CD32;
+      display: block;
+      margin: 10px auto;
+      padding: 10px 20px;
+      background-color: #4CAF50;
       color: white;
       border: none;
-      padding: 10px;
-      margin: 5px;
-      font-size: 16px;
-      border-radius: 5px;
+      border-radius: 6px;
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
 
     .option:hover {
-      background: #228B22;
+      background-color: #45a049;
     }
 
     #game-over-box {
+      text-align: center;
       display: none;
+      padding: 20px;
+      background: #fff;
+      border: 2px solid #444;
+      border-radius: 10px;
       position: absolute;
-      top: 50%;
+      top: 30%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.8);
-      padding: 40px;
-      text-align: center;
-      color: white;
-      border-radius: 10px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
-    }
-
-    #game-over-message {
-      font-size: 24px;
-      margin-bottom: 20px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
     }
 
     .btn {
-      background: #ff6347;
-      color: white;
-      font-size: 18px;
-      padding: 10px 20px;
+      padding: 12px 24px;
+      font-size: 16px;
+      margin-top: 15px;
+      cursor: pointer;
       border: none;
       border-radius: 8px;
-      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
       transition: background-color 0.3s ease;
     }
 
     .btn:hover {
-      background: #ff4500;
+      background-color: #45a049;
     }
 
-    #start-btn {
-      background: #32CD32;
-      color: white;
-      font-size: 22px;
-      padding: 15px 30px;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
+    #start-screen {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%); /* Center the start button */
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #f0f0f0;
     }
 
-    #start-btn:hover {
-      background: #228B22;
+    .start-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
     }
 
+    .start-content h1 {
+      margin-bottom: 20px;
+      font-size: 36px;
+      color: #333;
+    }
   </style>
 </head>
 <body>
+
   <!-- Start Screen -->
   <div id="start-screen">
-    <h1>Welcome to Quiz Runner</h1>
-    <button id="start-btn" class="btn">Start Game</button>
+    <div class="start-content">
+      <h1>Welcome to Quiz Runner</h1>
+      <button id="start-btn" class="btn">Start Game</button>
+    </div>
   </div>
 
-  <!-- Game Canvas and Scoreboard -->
+  <!-- Scoreboard -->
   <div id="scoreboard">
     <div>Score: <span id="score">0</span></div>
     <div>Lives: <span id="lives">3</span></div>
     <div>High Score: <span id="highscore">0</span></div>
   </div>
 
-  <canvas id="gameCanvas" width="800" height="400"></canvas>
-
-  <div id="game-over-box">
-    <h2 id="game-over-message"></h2>
-    <button class="btn" onclick="restartGame()">Race Again</button>
-  </div>
-
+  <!-- Quiz Box -->
   <div id="question-box">
     <h3 id="question-text"></h3>
     <div id="options"></div>
+  </div>
+
+  <!-- Game Canvas -->
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+  <!-- Game Over Box -->
+  <div id="game-over-box">
+    <h2 id="game-over-message"></h2>
+    <button class="btn" onclick="restartGame()">Race Again</button>
   </div>
 
   <script>
@@ -203,21 +190,16 @@
     let correctAnswerGiven = false;
     let gameRunning = false;
 
-    // Start the game
     function startGame() {
-      gameRunning = true;
-      score = 0;
-      lives = 3;
-      document.getElementById("score").textContent = score;
-      document.getElementById("lives").textContent = lives;
       document.getElementById("start-screen").style.display = "none";
-      document.getElementById("scoreboard").style.display = "flex";  // Show scoreboard
-      document.getElementById("gameCanvas").style.display = "block";
-      gameLoop();
+      document.getElementById("scoreboard").style.display = "block";
+      gameRunning = true;
       spawnQuestionWithObstacle();
+      gameLoop();
     }
 
-    // Draw the player character with animation
+    document.getElementById("start-btn").addEventListener("click", startGame);
+
     function drawPlayer() {
       if (player.hit && player.hitFrame < 10) {
         ctx.fillStyle = player.hitFrame % 2 === 0 ? "#ff0000" : "#ffaaaa";
@@ -225,26 +207,24 @@
       } else {
         player.hit = false;
         player.hitFrame = 0;
-        ctx.fillStyle = "#FF6347"; // Tomato red color
+        ctx.fillStyle = "red";
       }
       ctx.fillRect(player.x, player.y, player.width, player.height);
     }
 
-    // Draw obstacles
     function drawObstacles() {
-      ctx.fillStyle = "#32CD32"; // Lime Green
+      ctx.fillStyle = "green";
       obstacles.forEach(ob => {
         ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
       });
     }
 
-    // Function to spawn a new question with an obstacle
     function spawnQuestionWithObstacle() {
       if (awaitingAnswer || !gameRunning || questions.length === 0) return;
 
       const index = Math.floor(Math.random() * questions.length);
       currentQuestion = questions.splice(index, 1)[0];
-      usedQuestions.push(currentQuestion); // Add question to usedQuestions
+      usedQuestions.push(currentQuestion);
 
       const ob = { x: canvas.width, y: ground, width: 40, height: 50, id: Date.now() };
       obstacles.push(ob);
@@ -269,29 +249,18 @@
         if (awaitingAnswer) {
           awaitingAnswer = false;
           document.getElementById("question-box").style.display = "none";
-          loseLife(); // Handle the failed question scenario
         }
-      }, 10000); // 10 seconds to answer
+      }, 10000);
     }
 
-    // Handle user answer
     function handleAnswer(selected) {
       document.getElementById("question-box").style.display = "none";
       awaitingAnswer = false;
       if (selected === currentQuestion.answer) {
         correctAnswerGiven = true;
-        // Player jumps over the obstacle
-        player.y = ground - player.height - 20; // Adjust for jump
-        setTimeout(() => {
-          player.y = ground - player.height;
-        }, 500);
-      } else {
-        correctAnswerGiven = false;
-        loseLife(true); // Handle collision on incorrect answer
       }
     }
 
-    // Lose life and check for game over
     function loseLife(withAnimation = false) {
       lives--;
       document.getElementById("lives").textContent = lives;
@@ -300,21 +269,24 @@
         player.hitFrame = 0;
       }
       if (lives <= 0) {
-        gameOver();
+        gameOver(false);
       }
     }
 
-    // Game Over screen
-    function gameOver() {
+    function gameOver(playerWon) {
       gameRunning = false;
       if (score > highscore) {
         localStorage.setItem("quizRunnerHighscore", score);
       }
-      document.getElementById("game-over-message").textContent = "Game Over! Try again.";
+
+      const message = playerWon
+        ? "You are worthy to be a BlendRunner"
+        : "Sorry your wheels fell off";
+
+      document.getElementById("game-over-message").textContent = message;
       document.getElementById("game-over-box").style.display = "block";
     }
 
-    // Restart the game
     function restartGame() {
       score = 0;
       lives = 3;
@@ -323,6 +295,7 @@
       player.jumping = false;
       obstacles = [];
       awaitingAnswer = false;
+      currentObstacle = null;
       correctAnswerGiven = false;
 
       if (questions.length === 0) {
@@ -333,42 +306,57 @@
       document.getElementById("score").textContent = score;
       document.getElementById("lives").textContent = lives;
       document.getElementById("game-over-box").style.display = "none";
-      gameLoop();
+
       spawnQuestionWithObstacle();
+      gameLoop();
     }
 
-    // Game loop function
     function gameLoop() {
       if (!gameRunning) return;
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas for next frame
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
       drawPlayer();
       drawObstacles();
 
-      // Update obstacle positions
+      if (!player.jumping) {
+        player.vy += gravity;
+        player.y += player.vy;
+        if (player.y >= ground - player.height) {
+          player.y = ground - player.height;
+          player.vy = 0;
+          player.jumping = false;
+        }
+      }
+
       obstacles.forEach(ob => {
         ob.x -= gameSpeed;
-        if (ob.x + ob.width < 0) {
-          obstacles = obstacles.filter(o => o.id !== ob.id); // Remove obstacles that go off-screen
-        }
 
-        // Check for collision
+        // Collision check
         if (
           player.x < ob.x + ob.width &&
           player.x + player.width > ob.x &&
-          player.y + player.height > ob.y
+          player.y + player.height >= ob.y
         ) {
-          if (!correctAnswerGiven) {
-            loseLife(true); // Collision with obstacle
+          if (correctAnswerGiven) {
+            player.vy = jumpPower;
+            player.jumping = true;
+            score++;
+            document.getElementById("score").textContent = score;
+          } else {
+            loseLife(true);
           }
+          obstacles = obstacles.filter(o => o.id !== ob.id);
+        }
+
+        // Remove off-screen
+        if (ob.x + ob.width < 0) {
+          obstacles = obstacles.filter(o => o.id !== ob.id);
         }
       });
 
-      requestAnimationFrame(gameLoop); // Keep the game running by requesting another frame
+      requestAnimationFrame(gameLoop);
     }
-
-    // Event listener to start the game
-    document.getElementById("start-btn").addEventListener("click", startGame);
   </script>
 </body>
 </html>

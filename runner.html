@@ -158,6 +158,19 @@
       0% { background-color: #f44336; }
       100% { background-color: #f0f8ff; }
     }
+
+    /* New animations */
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background-color: #ff5722;
+      animation: particleAnimation 0.6s ease-out forwards;
+    }
+
+    @keyframes particleAnimation {
+      0% { transform: scale(1) translateY(0); opacity: 1; }
+      100% { transform: scale(0.2) translateY(-50px); opacity: 0; }
+    }
   </style>
 </head>
 <body>
@@ -341,7 +354,7 @@
         ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
       }
     }
-  
+
     function flashCollision() {
       canvas.classList.add("flash");
       setTimeout(() => canvas.classList.remove("flash"), 300);
@@ -356,13 +369,13 @@
         endGame();
       }
     }
-  
+
     function endGame() {
       gameRunning = false;
       document.getElementById("final-score").textContent = score;
       document.getElementById("game-over-box").style.display = "block";
     }
-  
+
     function gameLoop() {
       if (!gameRunning) return;
   

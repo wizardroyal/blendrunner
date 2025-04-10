@@ -158,19 +158,6 @@
       0% { background-color: #f44336; }
       100% { background-color: #f0f8ff; }
     }
-
-    /* New animations */
-    .particle {
-      position: absolute;
-      border-radius: 50%;
-      background-color: #ff5722;
-      animation: particleAnimation 0.6s ease-out forwards;
-    }
-
-    @keyframes particleAnimation {
-      0% { transform: scale(1) translateY(0); opacity: 1; }
-      100% { transform: scale(0.2) translateY(-50px); opacity: 0; }
-    }
   </style>
 </head>
 <body>
@@ -200,7 +187,7 @@
     const questionBox = document.getElementById("question-box");
     const questionText = document.getElementById("question-text");
     const optionsContainer = document.getElementById("options");
-  
+
     let score = 0;
     let lives = 3;
     let gameRunning = false;
@@ -210,41 +197,41 @@
     let questionAnswered = false;
     let questionTimer = null;
     let obstacleHandled = false;
-    let obstacleSpeed = 2.5; // Set initial speed
-  
+    let obstacleSpeed = 2.5;
+
     const player = {
       x: 100,
-      y: 300, // Initial Y coordinate (feet aligned with the ground)
+      y: 300,
       width: 40,
-      height: 40, // Adjusted player height for alignment with obstacle base
+      height: 40,
       vy: 0,
       gravity: 1.5,
-      jumpStrength: -22, // Increased jump power to clear obstacle
+      jumpStrength: -22,
       grounded: true,
       update() {
-        this.vy += this.gravity;  // Apply gravity
-        this.y += this.vy;  // Move player down
-  
-        if (this.y >= 300) {  // Check if the player has hit the ground
-          this.y = 300;  // Reset to ground level
-          this.vy = 0;  // Stop downward movement
-          this.grounded = true;  // Player is now grounded
+        this.vy += this.gravity;
+        this.y += this.vy;
+
+        if (this.y >= 300) {
+          this.y = 300;
+          this.vy = 0;
+          this.grounded = true;
         } else {
-          this.grounded = false;  // Player is in the air
+          this.grounded = false;
         }
       },
       jump() {
         if (this.grounded) {
-          this.vy = this.jumpStrength;  // Apply jump force
-          this.grounded = false;  // Set grounded to false as the player is now in the air
+          this.vy = this.jumpStrength;
+          this.grounded = false;
         }
       },
       draw() {
         ctx.fillStyle = "#ff5722";
-        ctx.fillRect(this.x, this.y, this.width, this.height); // Make sure player is visible
+        ctx.fillRect(this.x, this.y, this.width, this.height);
       }
     };
-  
+
     const questions = [
       { q: "What is the capital of France?", options: ["Paris", "Rome", "Berlin", "Madrid"], answer: "Paris" },
       { q: "What is 5 + 3?", options: ["8", "6", "9", "7"], answer: "8" },
@@ -257,7 +244,7 @@
       { q: "What is the capital of Japan?", options: ["Tokyo", "Seoul", "Beijing", "Bangkok"], answer: "Tokyo" },
       { q: "What is the hardest natural substance?", options: ["Diamond", "Gold", "Iron", "Platinum"], answer: "Diamond" }
     ];
-  
+
     function showQuestion() {
       const q = questions[++currentQuestionIndex % questions.length];
       questionBox.style.display = "block";
@@ -265,7 +252,7 @@
       optionsContainer.innerHTML = "";
       questionAnswered = false;
       obstacleHandled = false;
-    
+
       q.options.forEach(option => {
         const button = document.createElement("button");
         button.textContent = option;
@@ -281,14 +268,14 @@
           questionBox.style.display = "none";
           spawnNextObstacleWithQuestion();
         }
-      }, 7000); // Adjusted to 7 seconds
+      }, 7000);
     }
-  
+
     function checkAnswer(selected, correct) {
       clearTimeout(questionTimer);
       questionAnswered = true;
       questionBox.style.display = "none";
-    
+
       if (selected === correct) {
         correctStreak++;
         if (correctStreak >= 3) {
@@ -298,12 +285,12 @@
         score += 10;
         document.getElementById("score").textContent = score;
         obstacleHandled = true;
-        setTimeout(spawnNextObstacleWithQuestion, 2000); // Breather of 2 seconds
+        setTimeout(spawnNextObstacleWithQuestion, 2000);
       } else {
         correctStreak = 0;
         loseLife();
         obstacleHandled = true;
-        setTimeout(spawnNextObstacleWithQuestion, 2000); // Breather of 2 seconds
+        setTimeout(spawnNextObstacleWithQuestion, 2000);
       }
     }
 
@@ -312,7 +299,7 @@
       spawnObstacle();
       showQuestion();
     }
-  
+
     function spawnObstacle() {
       obstacle = {
         x: canvas.width,
@@ -321,19 +308,17 @@
         height: 80
       };
     }
-  
+
     function updateObstacle() {
       if (!obstacle) return;
       obstacle.x -= obstacleSpeed;
 
-      // Trigger jump when the obstacle reaches the player
       if (obstacle.x < player.x + player.width + 10 && !obstacleHandled && player.grounded) {
         if (questionAnswered) {
-          player.jump(); // Trigger jump when the obstacle reaches the player
+          player.jump();
         }
       }
 
-      // Collision check when obstacle reaches player
       if (
         obstacle.x < player.x + player.width &&
         obstacle.x + obstacle.width > player.x &&
@@ -361,7 +346,7 @@
       document.getElementById("final-score").textContent = score;
       document.getElementById("game-over-box").style.display = "block";
     }
-  
+
     function startGame() {
       gameRunning = true;
       lives = 3;
@@ -371,14 +356,14 @@
       document.getElementById("start-screen").style.display = "none";
       spawnNextObstacleWithQuestion();
     }
-  
+
     document.getElementById("start-btn").addEventListener("click", startGame);
     window.addEventListener("keydown", (event) => {
       if (event.key === " " || event.key === "ArrowUp") {
         player.jump();
       }
     });
-  
+
     function animate() {
       if (!gameRunning) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -387,7 +372,7 @@
       updateObstacle();
       requestAnimationFrame(animate);
     }
-  
+
     animate();
   </script>
 </body>

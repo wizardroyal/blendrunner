@@ -240,11 +240,8 @@
         }
       },
       draw() {
-        const stretch = this.vy < 0 ? 1.2 : this.vy > 5 ? 0.8 : 1;
-        const h = this.height * stretch;
-        const w = this.width * (2 - stretch);
         ctx.fillStyle = "#ff5722";
-        ctx.fillRect(this.x, this.y + this.height - h, w, h);
+        ctx.fillRect(this.x, this.y, this.width, this.height); // Make sure player is visible
       }
     };
   

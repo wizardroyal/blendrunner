@@ -342,3 +342,56 @@
         obstacle.x + obstacle.width > player.x &&
         player.y + player.height > obstacle.y
       ) {
+        obstacle = null;
+        loseLife();
+      }
+
+      if (obstacle && obstacle.x + obstacle.width < 0) {
+        obstacle = null;
+      }
+    }
+
+    function loseLife() {
+      lives--;
+      document.getElementById("lives").textContent = lives;
+      if (lives <= 0) {
+        gameOver();
+      }
+    }
+
+    function gameOver() {
+      gameRunning = false;
+      document.getElementById("final-score").textContent = score;
+      document.getElementById("game-over-box").style.display = "block";
+    }
+  
+    function startGame() {
+      gameRunning = true;
+      lives = 3;
+      score = 0;
+      document.getElementById("score").textContent = score;
+      document.getElementById("lives").textContent = lives;
+      document.getElementById("start-screen").style.display = "none";
+      spawnNextObstacleWithQuestion();
+    }
+  
+    document.getElementById("start-btn").addEventListener("click", startGame);
+    window.addEventListener("keydown", (event) => {
+      if (event.key === " " || event.key === "ArrowUp") {
+        player.jump();
+      }
+    });
+  
+    function animate() {
+      if (!gameRunning) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      player.update();
+      player.draw();
+      updateObstacle();
+      requestAnimationFrame(animate);
+    }
+  
+    animate();
+  </script>
+</body>
+</html>

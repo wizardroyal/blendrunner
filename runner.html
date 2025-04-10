@@ -197,6 +197,7 @@
     let questionAnswered = false;
     let questionTimer = null;
     let obstacleHandled = false;
+    let obstacleSpeed = 2.5; // Set initial speed
   
     const player = {
       x: 100,
@@ -267,7 +268,7 @@
           questionBox.style.display = "none";
           spawnNextObstacleWithQuestion();
         }
-      }, 4000); // Give 4 seconds to answer
+      }, 7000); // Adjusted to 7 seconds
     }
   
     function checkAnswer(selected, correct) {
@@ -284,12 +285,12 @@
         score += 10;
         document.getElementById("score").textContent = score;
         obstacleHandled = true;
-        setTimeout(spawnNextObstacleWithQuestion, 2000);
+        setTimeout(spawnNextObstacleWithQuestion, 2000); // Breather of 2 seconds
       } else {
         correctStreak = 0;
         loseLife();
         obstacleHandled = true;
-        setTimeout(spawnNextObstacleWithQuestion, 2000);
+        setTimeout(spawnNextObstacleWithQuestion, 2000); // Breather of 2 seconds
       }
     }
 
@@ -310,7 +311,7 @@
   
     function updateObstacle() {
       if (!obstacle) return;
-      obstacle.x -= 3;
+      obstacle.x -= obstacleSpeed;
 
       // Check if the player is close enough to jump over the obstacle
       if (obstacle.x < player.x + player.width + 10 && !obstacleHandled) {

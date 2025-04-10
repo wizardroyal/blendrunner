@@ -177,9 +177,9 @@
     </div>
   </div>
   <div id="game-over-box">
-    <h2 id="game-over-message"></h2>
+    <h2>Game Over!</h2>
     <p>Your score: <span id="final-score"></span></p>
-    <button class="btn" id="reblend-btn">Reblend</button>
+    <button class="btn" onclick="location.reload()">Reblend</button>
   </div>
   <script>
     const canvas = document.getElementById("gameCanvas");
@@ -187,10 +187,7 @@
     const questionBox = document.getElementById("question-box");
     const questionText = document.getElementById("question-text");
     const optionsContainer = document.getElementById("options");
-    const gameOverBox = document.getElementById("game-over-box");
-    const gameOverMessage = document.getElementById("game-over-message");
-    const reblendBtn = document.getElementById("reblend-btn");
-
+  
     let score = 0;
     let lives = 3;
     let gameRunning = false;
@@ -200,16 +197,15 @@
     let questionAnswered = false;
     let questionTimer = null;
     let obstacleHandled = false;
-    let answeredCorrectly = false;
-
+  
     const player = {
       x: 100,
-      y: 300,
+      y: 300, // Initial Y coordinate (feet aligned with the ground)
       width: 40,
-      height: 20,
+      height: 40, // Adjusted player height for alignment with obstacle base
       vy: 0,
       gravity: 1.5,
-      jumpStrength: -18,
+      jumpStrength: -22, // Increased jump power to clear obstacle
       grounded: true,
       update() {
         this.vy += this.gravity;
@@ -234,7 +230,7 @@
         ctx.fillRect(this.x, this.y + this.height - h, w, h);
       }
     };
-
+  
     const questions = [
       { q: "What is the capital of France?", options: ["Paris", "Rome", "Berlin", "Madrid"], answer: "Paris" },
       { q: "What is 5 + 3?", options: ["8", "6", "9", "7"], answer: "8" },
@@ -247,7 +243,7 @@
       { q: "What is the capital of Japan?", options: ["Tokyo", "Seoul", "Beijing", "Bangkok"], answer: "Tokyo" },
       { q: "What is the hardest natural substance?", options: ["Diamond", "Gold", "Iron", "Platinum"], answer: "Diamond" }
     ];
-
+  
     function showQuestion() {
       const q = questions[++currentQuestionIndex % questions.length];
       questionBox.style.display = "block";
@@ -255,35 +251,43 @@
       optionsContainer.innerHTML = "";
       questionAnswered = false;
       obstacleHandled = false;
-
-      q.options.forEach(option => {
-        const btn = document.createElement("button");
-        btn.classList.add("option");
-        btn.textContent = option;
-        btn.onclick = () => checkAnswer(option, q.answer);
-        optionsContainer.appendChild(btn);
-      });
-
-      // Set timeout if player doesn't answer
+    
       questionTimer = setTimeout(() => {
         if (!questionAnswered) {
           questionBox.style.display = "none";
         }
-      }, 4000); // Give them 4 seconds to answer
+      }, 4000); // Give 4 seconds to answer
     }
-
+  
     function checkAnswer(selected, correct) {
       clearTimeout(questionTimer);
       questionAnswered = true;
       questionBox.style.display = "none";
-
+    
       if (selected === correct) {
-        answeredCorrectly = true;
+        correctStreak++;
+        if (correctStreak >= 3) {
+          score += 100;
+          correctStreak = 0;
+        }
+        score += 10;
+        document.getElementById("score").textContent = score;
+        obstacleHandled = true;
+        setTimeout(spawnNextObstacleWithQuestion, 2000);
       } else {
-        answeredCorrectly = false;
+        correctStreak = 0;
+        loseLife();
+        obstacleHandled = true;
+        setTimeout(spawnNextObstacleWithQuestion, 2000);
       }
     }
 
+    function spawnNextObstacleWithQuestion() {
+      if (!gameRunning) return;
+      spawnObstacle();
+      showQuestion();
+    }
+  
     function spawnObstacle() {
       obstacle = {
         x: canvas.width,
@@ -292,95 +296,84 @@
         height: 80
       };
     }
-
+  
     function updateObstacle() {
       if (!obstacle) return;
       obstacle.x -= 3;
 
-      // Check if obstacle reaches player
+      // Collision check when obstacle reaches player
       if (
         obstacle.x < player.x + player.width &&
         obstacle.x + obstacle.width > player.x &&
         player.y + player.height > obstacle.y
       ) {
-        if (answeredCorrectly) {
-          player.jump(); // Jump immediately
-          score += 10;
-          document.getElementById("score").textContent = score;
-        } else {
-          loseLife();
-        }
         obstacle = null;
+        loseLife();
       }
-
+  
       if (obstacle && obstacle.x + obstacle.width < 0) {
         obstacle = null;
       }
     }
-
+  
     function drawObstacle() {
       if (obstacle) {
         ctx.fillStyle = "#333";
         ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
       }
     }
-
+  
+    function flashCollision() {
+      canvas.classList.add("flash");
+      setTimeout(() => canvas.classList.remove("flash"), 300);
+    }
+  
     function loseLife() {
       if (!gameRunning) return;
       lives--;
       document.getElementById("lives").textContent = lives;
+      flashCollision();
       if (lives <= 0) {
-        endGame("Sorry, your legs fell off!");
+        endGame();
       }
     }
-
-    function endGame(message) {
+  
+    function endGame() {
       gameRunning = false;
       document.getElementById("final-score").textContent = score;
-      gameOverMessage.textContent = message;
-      gameOverBox.style.display = "block";
+      document.getElementById("game-over-box").style.display = "block";
     }
-
+  
     function gameLoop() {
       if (!gameRunning) return;
-
+  
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       player.update();
       player.draw();
       updateObstacle();
       drawObstacle();
-
+  
       requestAnimationFrame(gameLoop);
     }
-
-    function restartGame() {
-      score = 0;
-      lives = 3;
-      document.getElementById("score").textContent = score;
-      document.getElementById("lives").textContent = lives;
-      currentQuestionIndex = -1;
-      gameRunning = true;
-      gameOverBox.style.display = "none";
-      spawnObstacle();
-      showQuestion();
-      gameLoop();
-    }
-
+  
     document.getElementById("start-btn").addEventListener("click", () => {
-      document.getElementById("start-screen").style.display = "none";
       gameRunning = true;
       score = 0;
       lives = 3;
+      currentQuestionIndex = 0;
+      obstacle = null;
       document.getElementById("score").textContent = score;
       document.getElementById("lives").textContent = lives;
-
-      spawnObstacle();
-      showQuestion();
+      document.getElementById("start-screen").style.display = "none";
+      spawnNextObstacleWithQuestion();
       gameLoop();
     });
-
-    reblendBtn.addEventListener("click", restartGame);
-
+  
+    document.addEventListener("keydown", (e) => {
+      if (gameRunning && e.key === " ") {
+        player.jump();
+      }
+    });
   </script>
 </body>
 </html>

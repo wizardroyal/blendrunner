@@ -282,6 +282,12 @@
         loseLife();
         shouldJump = false;
       }
+
+      setTimeout(() => {
+        if (gameRunning) {
+          spawnQuestionWithObstacle();
+        }
+      }, 3000);
     }
   
     function spawnObstacle() {
@@ -354,8 +360,8 @@
       document.getElementById("start-screen").style.display = "none";
       setTimeout(() => {
         spawnQuestionWithObstacle();
-        questionInterval = setInterval(spawnQuestionWithObstacle, 7000);
       }, 5000);
+
       gameLoop();
     });
   

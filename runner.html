@@ -312,6 +312,13 @@
       if (!obstacle) return;
       obstacle.x -= 3;
 
+      // Check if the player is close enough to jump over the obstacle
+      if (obstacle.x < player.x + player.width + 10 && !obstacleHandled) {
+        if (questionAnswered && !player.grounded) {
+          player.jump(); // Player jumps when the obstacle reaches them
+        }
+      }
+
       // Collision check when obstacle reaches player
       if (
         obstacle.x < player.x + player.width &&

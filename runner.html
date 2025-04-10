@@ -316,6 +316,7 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       player.update();
       player.draw();
+      drawObstacle(); // <-- Add this line to render the obstacle
       updateObstacle();
       requestAnimationFrame(gameLoop);
     }

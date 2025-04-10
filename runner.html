@@ -252,9 +252,20 @@
       questionAnswered = false;
       obstacleHandled = false;
     
+      q.options.forEach(option => {
+        const button = document.createElement("button");
+        button.textContent = option;
+        button.classList.add("option");
+        button.addEventListener("click", () => {
+          checkAnswer(option, q.answer);
+        });
+        optionsContainer.appendChild(button);
+      });
+
       questionTimer = setTimeout(() => {
         if (!questionAnswered) {
           questionBox.style.display = "none";
+          spawnNextObstacleWithQuestion();
         }
       }, 4000); // Give 4 seconds to answer
     }

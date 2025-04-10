@@ -194,6 +194,10 @@
     let currentQuestionIndex = -1;
     let obstacle = null;
     let correctStreak = 0;
+    let questionAnswered = false;
+    let questionTimer = null;
+    let obstacleHandled = false;
+
   
     const player = {
       x: 100,
@@ -246,18 +250,23 @@
       questionBox.style.display = "block";
       questionText.textContent = q.q;
       optionsContainer.innerHTML = "";
-  
-      q.options.forEach(opt => {
-        const btn = document.createElement("button");
-        btn.textContent = opt;
-        btn.className = "option";
-        btn.onclick = () => checkAnswer(opt, q.answer);
-        optionsContainer.appendChild(btn);
-      });
+      questionAnswered = false;
+      obstacleHandled = false;
+    
+      // Set timeout if player doesn't answer
+      questionTimer = setTimeout(() => {
+        if (!questionAnswered) {
+          questionBox.style.display = "none";
+          // Let obstacle collide naturally
+        }
+      }, 4000); // Give them 4 seconds to answer
     }
   
     function checkAnswer(selected, correct) {
+      clearTimeout(questionTimer);
+      questionAnswered = true;
       questionBox.style.display = "none";
+    
       if (selected === correct) {
         correctStreak++;
         if (correctStreak >= 3) {
@@ -266,14 +275,17 @@
         }
         score += 10;
         document.getElementById("score").textContent = score;
-        player.jump(); // Jump immediately on correct answer
+        player.jump(); // Jump immediately
+        obstacleHandled = true;
+        setTimeout(spawnNextObstacleWithQuestion, 2000);
       } else {
         correctStreak = 0;
         loseLife();
+        obstacleHandled = true;
+        setTimeout(spawnNextObstacleWithQuestion, 2000);
       }
-  
-      setTimeout(spawnNextObstacleWithQuestion, 1000);
     }
+
   
     function spawnNextObstacleWithQuestion() {
       if (!gameRunning) return;

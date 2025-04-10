@@ -177,9 +177,9 @@
     </div>
   </div>
   <div id="game-over-box">
-    <h2>Game Over!</h2>
+    <h2 id="game-over-message"></h2>
     <p>Your score: <span id="final-score"></span></p>
-    <button class="btn" onclick="location.reload()">Play Again</button>
+    <button class="btn" id="reblend-btn">Reblend</button>
   </div>
   <script>
     const canvas = document.getElementById("gameCanvas");
@@ -187,6 +187,9 @@
     const questionBox = document.getElementById("question-box");
     const questionText = document.getElementById("question-text");
     const optionsContainer = document.getElementById("options");
+    const gameOverBox = document.getElementById("game-over-box");
+    const gameOverMessage = document.getElementById("game-over-message");
+    const reblendBtn = document.getElementById("reblend-btn");
 
     let score = 0;
     let lives = 3;
@@ -197,6 +200,7 @@
     let questionAnswered = false;
     let questionTimer = null;
     let obstacleHandled = false;
+    let answeredCorrectly = false;
 
     const player = {
       x: 100,
@@ -251,24 +255,21 @@
       optionsContainer.innerHTML = "";
       questionAnswered = false;
       obstacleHandled = false;
-    
+
+      q.options.forEach(option => {
+        const btn = document.createElement("button");
+        btn.classList.add("option");
+        btn.textContent = option;
+        btn.onclick = () => checkAnswer(option, q.answer);
+        optionsContainer.appendChild(btn);
+      });
+
       // Set timeout if player doesn't answer
       questionTimer = setTimeout(() => {
         if (!questionAnswered) {
           questionBox.style.display = "none";
-          loseLife();  // Trigger a life loss if question wasn't answered
-          setTimeout(spawnNextObstacleWithQuestion, 2000);  // Proceed to the next question
         }
       }, 4000); // Give them 4 seconds to answer
-
-      // Create the answer options
-      q.options.forEach(option => {
-        const optionButton = document.createElement("button");
-        optionButton.className = "option";
-        optionButton.textContent = option;
-        optionButton.onclick = () => checkAnswer(option, q.answer);
-        optionsContainer.appendChild(optionButton);
-      });
     }
 
     function checkAnswer(selected, correct) {
@@ -277,29 +278,10 @@
       questionBox.style.display = "none";
 
       if (selected === correct) {
-        correctStreak++;
-        if (correctStreak >= 3) {
-          score += 100;
-          correctStreak = 0;
-        }
-        score += 10;
-        document.getElementById("score").textContent = score;
-        player.jump(); // Jump immediately
-        obstacleHandled = true;
-        setTimeout(spawnNextObstacleWithQuestion, 2000);
+        answeredCorrectly = true;
       } else {
-        correctStreak = 0;
-        loseLife();
-        obstacleHandled = true;
-        setTimeout(spawnNextObstacleWithQuestion, 2000);
+        answeredCorrectly = false;
       }
-    }
-
-    function spawnNextObstacleWithQuestion() {
-      if (!gameRunning) return;
-      obstacleHandled = false;  // Reset the flag
-      spawnObstacle();
-      showQuestion();
     }
 
     function spawnObstacle() {
@@ -312,18 +294,23 @@
     }
 
     function updateObstacle() {
-      if (!obstacle || obstacleHandled) return;  // Skip if obstacle is handled already
-
+      if (!obstacle) return;
       obstacle.x -= 3;
 
-      // Collision check
+      // Check if obstacle reaches player
       if (
         obstacle.x < player.x + player.width &&
         obstacle.x + obstacle.width > player.x &&
         player.y + player.height > obstacle.y
       ) {
+        if (answeredCorrectly) {
+          player.jump(); // Jump immediately
+          score += 10;
+          document.getElementById("score").textContent = score;
+        } else {
+          loseLife();
+        }
         obstacle = null;
-        loseLife();
       }
 
       if (obstacle && obstacle.x + obstacle.width < 0) {
@@ -338,25 +325,20 @@
       }
     }
 
-    function flashCollision() {
-      canvas.classList.add("flash");
-      setTimeout(() => canvas.classList.remove("flash"), 300);
-    }
-
     function loseLife() {
       if (!gameRunning) return;
       lives--;
       document.getElementById("lives").textContent = lives;
-      flashCollision();
       if (lives <= 0) {
-        endGame();
+        endGame("Sorry, your legs fell off!");
       }
     }
 
-    function endGame() {
+    function endGame(message) {
       gameRunning = false;
       document.getElementById("final-score").textContent = score;
-      document.getElementById("game-over-box").style.display = "block";
+      gameOverMessage.textContent = message;
+      gameOverBox.style.display = "block";
     }
 
     function gameLoop() {
@@ -371,6 +353,19 @@
       requestAnimationFrame(gameLoop);
     }
 
+    function restartGame() {
+      score = 0;
+      lives = 3;
+      document.getElementById("score").textContent = score;
+      document.getElementById("lives").textContent = lives;
+      currentQuestionIndex = -1;
+      gameRunning = true;
+      gameOverBox.style.display = "none";
+      spawnObstacle();
+      showQuestion();
+      gameLoop();
+    }
+
     document.getElementById("start-btn").addEventListener("click", () => {
       document.getElementById("start-screen").style.display = "none";
       gameRunning = true;
@@ -379,10 +374,13 @@
       document.getElementById("score").textContent = score;
       document.getElementById("lives").textContent = lives;
 
-      spawnNextObstacleWithQuestion();
+      spawnObstacle();
+      showQuestion();
       gameLoop();
     });
-  </script>
 
+    reblendBtn.addEventListener("click", restartGame);
+
+  </script>
 </body>
 </html>

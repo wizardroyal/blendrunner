@@ -187,7 +187,7 @@
     const questionBox = document.getElementById("question-box");
     const questionText = document.getElementById("question-text");
     const optionsContainer = document.getElementById("options");
-  
+
     let score = 0;
     let lives = 3;
     let gameRunning = false;
@@ -198,7 +198,6 @@
     let questionTimer = null;
     let obstacleHandled = false;
 
-  
     const player = {
       x: 100,
       y: 300,
@@ -231,7 +230,7 @@
         ctx.fillRect(this.x, this.y + this.height - h, w, h);
       }
     };
-  
+
     const questions = [
       { q: "What is the capital of France?", options: ["Paris", "Rome", "Berlin", "Madrid"], answer: "Paris" },
       { q: "What is 5 + 3?", options: ["8", "6", "9", "7"], answer: "8" },
@@ -244,7 +243,7 @@
       { q: "What is the capital of Japan?", options: ["Tokyo", "Seoul", "Beijing", "Bangkok"], answer: "Tokyo" },
       { q: "What is the hardest natural substance?", options: ["Diamond", "Gold", "Iron", "Platinum"], answer: "Diamond" }
     ];
-  
+
     function showQuestion() {
       const q = questions[++currentQuestionIndex % questions.length];
       questionBox.style.display = "block";
@@ -257,16 +256,26 @@
       questionTimer = setTimeout(() => {
         if (!questionAnswered) {
           questionBox.style.display = "none";
-          // Let obstacle collide naturally
+          loseLife();  // Trigger a life loss if question wasn't answered
+          setTimeout(spawnNextObstacleWithQuestion, 2000);  // Proceed to the next question
         }
       }, 4000); // Give them 4 seconds to answer
+
+      // Create the answer options
+      q.options.forEach(option => {
+        const optionButton = document.createElement("button");
+        optionButton.className = "option";
+        optionButton.textContent = option;
+        optionButton.onclick = () => checkAnswer(option, q.answer);
+        optionsContainer.appendChild(optionButton);
+      });
     }
-  
+
     function checkAnswer(selected, correct) {
       clearTimeout(questionTimer);
       questionAnswered = true;
       questionBox.style.display = "none";
-    
+
       if (selected === correct) {
         correctStreak++;
         if (correctStreak >= 3) {
@@ -286,13 +295,13 @@
       }
     }
 
-  
     function spawnNextObstacleWithQuestion() {
       if (!gameRunning) return;
+      obstacleHandled = false;  // Reset the flag
       spawnObstacle();
       showQuestion();
     }
-  
+
     function spawnObstacle() {
       obstacle = {
         x: canvas.width,
@@ -301,11 +310,12 @@
         height: 80
       };
     }
-  
+
     function updateObstacle() {
-      if (!obstacle) return;
+      if (!obstacle || obstacleHandled) return;  // Skip if obstacle is handled already
+
       obstacle.x -= 3;
-  
+
       // Collision check
       if (
         obstacle.x < player.x + player.width &&
@@ -315,24 +325,24 @@
         obstacle = null;
         loseLife();
       }
-  
+
       if (obstacle && obstacle.x + obstacle.width < 0) {
         obstacle = null;
       }
     }
-  
+
     function drawObstacle() {
       if (obstacle) {
         ctx.fillStyle = "#333";
         ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
       }
     }
-  
+
     function flashCollision() {
       canvas.classList.add("flash");
       setTimeout(() => canvas.classList.remove("flash"), 300);
     }
-  
+
     function loseLife() {
       if (!gameRunning) return;
       lives--;
@@ -342,25 +352,25 @@
         endGame();
       }
     }
-  
+
     function endGame() {
       gameRunning = false;
       document.getElementById("final-score").textContent = score;
       document.getElementById("game-over-box").style.display = "block";
     }
-  
+
     function gameLoop() {
       if (!gameRunning) return;
-  
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       player.update();
       player.draw();
       updateObstacle();
       drawObstacle();
-  
+
       requestAnimationFrame(gameLoop);
     }
-  
+
     document.getElementById("start-btn").addEventListener("click", () => {
       document.getElementById("start-screen").style.display = "none";
       gameRunning = true;
@@ -368,7 +378,7 @@
       lives = 3;
       document.getElementById("score").textContent = score;
       document.getElementById("lives").textContent = lives;
-  
+
       spawnNextObstacleWithQuestion();
       gameLoop();
     });

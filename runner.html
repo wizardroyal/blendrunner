@@ -222,18 +222,21 @@
       jumpStrength: -22, // Increased jump power to clear obstacle
       grounded: true,
       update() {
-        this.vy += this.gravity;
-        this.y += this.vy;
-        if (this.y >= 300) {
-          this.y = 300;
-          this.vy = 0;
-          this.grounded = true;
+        this.vy += this.gravity;  // Apply gravity
+        this.y += this.vy;  // Move player down
+  
+        if (this.y >= 300) {  // Check if the player has hit the ground
+          this.y = 300;  // Reset to ground level
+          this.vy = 0;  // Stop downward movement
+          this.grounded = true;  // Player is now grounded
+        } else {
+          this.grounded = false;  // Player is in the air
         }
       },
       jump() {
         if (this.grounded) {
-          this.vy = this.jumpStrength;
-          this.grounded = false;
+          this.vy = this.jumpStrength;  // Apply jump force
+          this.grounded = false;  // Set grounded to false as the player is now in the air
         }
       },
       draw() {
@@ -326,10 +329,10 @@
       if (!obstacle) return;
       obstacle.x -= obstacleSpeed;
 
-      // Check if the player is close enough to jump over the obstacle
-      if (obstacle.x < player.x + player.width + 10 && !obstacleHandled) {
-        if (questionAnswered && !player.grounded) {
-          player.jump(); // Player jumps when the obstacle reaches them
+      // Trigger jump when the obstacle reaches the player
+      if (obstacle.x < player.x + player.width + 10 && !obstacleHandled && player.grounded) {
+        if (questionAnswered) {
+          player.jump(); // Trigger jump when the obstacle reaches the player
         }
       }
 
@@ -339,73 +342,3 @@
         obstacle.x + obstacle.width > player.x &&
         player.y + player.height > obstacle.y
       ) {
-        obstacle = null;
-        loseLife();
-      }
-  
-      if (obstacle && obstacle.x + obstacle.width < 0) {
-        obstacle = null;
-      }
-    }
-  
-    function drawObstacle() {
-      if (obstacle) {
-        ctx.fillStyle = "#333";
-        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-      }
-    }
-
-    function flashCollision() {
-      canvas.classList.add("flash");
-      setTimeout(() => canvas.classList.remove("flash"), 300);
-    }
-  
-    function loseLife() {
-      if (!gameRunning) return;
-      lives--;
-      document.getElementById("lives").textContent = lives;
-      flashCollision();
-      if (lives <= 0) {
-        endGame();
-      }
-    }
-
-    function endGame() {
-      gameRunning = false;
-      document.getElementById("final-score").textContent = score;
-      document.getElementById("game-over-box").style.display = "block";
-    }
-
-    function gameLoop() {
-      if (!gameRunning) return;
-  
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      player.update();
-      player.draw();
-      updateObstacle();
-      drawObstacle();
-  
-      requestAnimationFrame(gameLoop);
-    }
-  
-    document.getElementById("start-btn").addEventListener("click", () => {
-      gameRunning = true;
-      score = 0;
-      lives = 3;
-      currentQuestionIndex = 0;
-      obstacle = null;
-      document.getElementById("score").textContent = score;
-      document.getElementById("lives").textContent = lives;
-      document.getElementById("start-screen").style.display = "none";
-      spawnNextObstacleWithQuestion();
-      gameLoop();
-    });
-  
-    document.addEventListener("keydown", (e) => {
-      if (gameRunning && e.key === " ") {
-        player.jump();
-      }
-    });
-  </script>
-</body>
-</html>

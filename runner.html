@@ -5,7 +5,159 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Quiz Runner</title>
   <style>
-    /* Your CSS remains the same */
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f8ff;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    #gameCanvas {
+      display: block;
+      background: linear-gradient(to top, #87ceeb, #ffffff);
+      border: 5px solid #4CAF50;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    }
+
+    #question-box {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 12px;
+      padding: 10px 15px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      max-width: 80%;
+      display: none;
+    }
+
+    #question-box h3 {
+      font-size: 20px;
+      color: #333;
+      margin: 0 0 15px;
+    }
+
+    #options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .option {
+      padding: 12px 24px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.1s;
+      text-align: center;
+    }
+
+    .option:hover {
+      background-color: #45a049;
+      transform: scale(1.05);
+    }
+
+    #scoreboard {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      text-align: left;
+      font-size: 18px;
+      color: #333;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 12px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #game-over-box {
+      text-align: center;
+      display: none;
+      padding: 25px;
+      background: #fff;
+      border: 2px solid #444;
+      border-radius: 15px;
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
+
+    .btn {
+      padding: 14px 28px;
+      font-size: 18px;
+      margin-top: 20px;
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      background-color: #4CAF50;
+      color: white;
+      transition: background-color 0.3s ease, transform 0.1s ease;
+    }
+
+    .btn:hover {
+      background-color: #45a049;
+      transform: scale(1.05);
+    }
+
+    #start-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #f7f7f7;
+      z-index: 999;
+    }
+
+    .start-content {
+      text-align: center;
+      background: #ffffffb3;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .start-content h1 {
+      margin-bottom: 20px;
+      font-size: 36px;
+      color: #333;
+    }
+
+    .start-content button {
+      padding: 15px 30px;
+      background-color: #4CAF50;
+      color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .start-content button:hover {
+      background-color: #45a049;
+    }
+
+    .flash {
+      animation: flashRed 0.3s;
+    }
+
+    @keyframes flashRed {
+      0% { background-color: #f44336; }
+      100% { background-color: #f0f8ff; }
+    }
   </style>
 </head>
 <body>
@@ -41,10 +193,7 @@
     let gameRunning = false;
     let currentQuestionIndex = -1;
     let obstacle = null;
-    let correctStreak = 0;
     let questionAnswered = false;
-    let questionTimer = null;
-    let obstacleHandled = false;
     let obstacleSpeed = 2.5;
 
     const player = {
@@ -94,11 +243,8 @@
       obstacle.x -= obstacleSpeed;
 
       // Only jump if the player is grounded and the obstacle is near
-      if (obstacle.x < player.x + player.width + 10 && !obstacleHandled && player.grounded) {
-        if (questionAnswered) {
-          player.jump();  // Trigger jump only if the question is answered correctly
-          obstacleHandled = true;
-        }
+      if (obstacle.x < player.x + player.width + 10 && player.grounded && questionAnswered) {
+        player.jump();  // Trigger jump only if the question is answered correctly
       }
 
       // Collision logic
@@ -155,7 +301,6 @@
       questionText.textContent = q.q;
       optionsContainer.innerHTML = "";
       questionAnswered = false;
-      obstacleHandled = false;
 
       q.options.forEach(option => {
         const button = document.createElement("button");
@@ -166,36 +311,21 @@
         });
         optionsContainer.appendChild(button);
       });
-
-      questionTimer = setTimeout(() => {
-        if (!questionAnswered) {
-          questionBox.style.display = "none";
-          spawnNextObstacleWithQuestion();
-        }
-      }, 7000);
     }
 
     function checkAnswer(selected, correct) {
-      clearTimeout(questionTimer);
       questionAnswered = true;
       questionBox.style.display = "none";
 
       if (selected === correct) {
-        correctStreak++;
-        if (correctStreak >= 3) {
-          score += 100;
-          correctStreak = 0;
-        }
         score += 10;
         document.getElementById("score").textContent = score;
       } else {
-        correctStreak = 0;
         loseLife();
       }
 
-      // Reset obstacleHandled and handle the next obstacle/question after a short delay
+      // Delay the next obstacle/question after the answer is processed
       setTimeout(() => {
-        obstacleHandled = false;
         spawnNextObstacleWithQuestion();
       }, 2000);
     }
@@ -220,7 +350,7 @@
     ];
 
     document.getElementById("start-btn").addEventListener("click", startGame);
-  
+
     function gameLoop() {
       if (!gameRunning) return;
 

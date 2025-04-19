@@ -194,11 +194,8 @@
     let gameRunning = false;
     let currentQuestionIndex = -1;
     let obstacle = null;
-    let correctStreak = 0;
     let questionAnswered = false;
-    let questionTimer = null;
     let obstacleHandled = false;
-    let obstacleSpeed = 2.5;
 
     const questions = [
       { q: "What is the capital of France?", options: ["Paris", "Rome", "Berlin", "Madrid"], answer: "Paris" },
@@ -257,7 +254,7 @@
 
     function updateObstacle() {
       if (!obstacle) return;
-      obstacle.x -= obstacleSpeed;
+      obstacle.x -= 2.5;
 
       // Jump if answered correctly
       if (obstacle.x < player.x + player.width + 10 && !obstacleHandled && player.grounded) {
@@ -320,7 +317,6 @@
       questionText.textContent = q.q;
       optionsContainer.innerHTML = "";
       questionAnswered = false;
-      obstacleHandled = false;
 
       q.options.forEach(option => {
         const button = document.createElement("button");
@@ -331,28 +327,21 @@
         });
         optionsContainer.appendChild(button);
       });
-
-      questionTimer = setTimeout(() => {
-        if (!questionAnswered) {
-          questionBox.style.display = "none";
-          spawnNextObstacleWithQuestion();
-        }
-      }, 7000);
     }
 
     function checkAnswer(selected, correct) {
-      clearTimeout(questionTimer);
       questionAnswered = true;
       questionBox.style.display = "none";
 
       if (selected === correct) {
         score += 10;
         document.getElementById("score").textContent = score;
-        spawnNextObstacleWithQuestion();
       } else {
         loseLife();
-        spawnNextObstacleWithQuestion();
       }
+
+      // Wait for the obstacle to be handled before moving to the next question
+      spawnObstacle();
     }
 
     function spawnNextObstacleWithQuestion() {
@@ -369,10 +358,11 @@
       updateObstacle();
       drawObstacle();
 
-      if (obstacle && obstacle.x < player.x + player.width) {
-        // If the obstacle reaches the player, check the answer
+      // Continue to next question once the obstacle is handled
+      if (obstacle && obstacle.x < player.x + player.width && player.grounded && obstacleHandled) {
+        // Delay the next question until the obstacle is gone
         if (!questionAnswered) {
-          questionAnswered = false;
+          showQuestion();
         }
       }
 

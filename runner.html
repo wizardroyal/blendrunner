@@ -200,6 +200,19 @@
     let obstacleHandled = false;
     let obstacleSpeed = 2.5;
 
+    const questions = [
+      { q: "What is the capital of France?", options: ["Paris", "Rome", "Berlin", "Madrid"], answer: "Paris" },
+      { q: "What is 5 + 3?", options: ["8", "6", "9", "7"], answer: "8" },
+      { q: "Who painted the Mona Lisa?", options: ["Leonardo da Vinci", "Vincent van Gogh", "Pablo Picasso", "Claude Monet"], answer: "Leonardo da Vinci" },
+      { q: "What is the largest planet?", options: ["Jupiter", "Saturn", "Earth", "Mars"], answer: "Jupiter" },
+      { q: "Who wrote 'Romeo and Juliet'?", options: ["William Shakespeare", "Charles Dickens", "Jane Austen", "Mark Twain"], answer: "William Shakespeare" },
+      { q: "What is the square root of 16?", options: ["4", "8", "16", "2"], answer: "4" },
+      { q: "Which gas do plants absorb from the air?", options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Hydrogen"], answer: "Carbon dioxide" },
+      { q: "What is the boiling point of water?", options: ["100°C", "90°C", "110°C", "120°C"], answer: "100°C" },
+      { q: "What is the capital of Japan?", options: ["Tokyo", "Seoul", "Beijing", "Bangkok"], answer: "Tokyo" },
+      { q: "What is the hardest natural substance?", options: ["Diamond", "Gold", "Iron", "Platinum"], answer: "Diamond" }
+    ];
+
     const player = {
       x: 100,
       y: 300,
@@ -346,4 +359,42 @@
 
       if (selected === correct) {
         correctStreak++;
-        if (correctStreak >= 3
+        if (correctStreak >= 3) {
+          score += 10;
+          document.getElementById("score").textContent = score;
+        }
+        spawnNextObstacleWithQuestion();
+      } else {
+        loseLife();
+        spawnNextObstacleWithQuestion();
+      }
+    }
+
+    function spawnNextObstacleWithQuestion() {
+      spawnObstacle();
+      showQuestion();
+    }
+
+    function gameLoop() {
+      if (!gameRunning) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      player.update();
+      player.draw();
+      updateObstacle();
+      drawObstacle();
+
+      if (obstacle && obstacle.x < player.x + player.width) {
+        // If the obstacle reaches the player, check the answer
+        if (!questionAnswered) {
+          questionAnswered = false;
+        }
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    document.getElementById("start-btn").addEventListener("click", startGame);
+  </script>
+</body>
+</html>

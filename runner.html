@@ -238,18 +238,6 @@
         if (this.grounded) {
           this.vy = this.jumpStrength;
           this.grounded = false;
-          // Add jump effect
-          const jumpEffect = document.createElement("div");
-          jumpEffect.style.position = "absolute";
-          jumpEffect.style.top = `${this.y}px`;
-          jumpEffect.style.left = `${this.x}px`;
-          jumpEffect.style.width = "40px";
-          jumpEffect.style.height = "40px";
-          jumpEffect.style.backgroundColor = "yellow";
-          jumpEffect.style.borderRadius = "50%";
-          jumpEffect.style.animation = "jumpEffect 0.3s";
-          document.body.appendChild(jumpEffect);
-          setTimeout(() => jumpEffect.remove(), 300); // Remove effect after animation
         }
       },
       draw() {
@@ -358,11 +346,8 @@
       questionBox.style.display = "none";
 
       if (selected === correct) {
-        correctStreak++;
-        if (correctStreak >= 3) {
-          score += 10;
-          document.getElementById("score").textContent = score;
-        }
+        score += 10;
+        document.getElementById("score").textContent = score;
         spawnNextObstacleWithQuestion();
       } else {
         loseLife();

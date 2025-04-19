@@ -181,7 +181,6 @@
     <p>Your score: <span id="final-score"></span></p>
     <button class="btn" onclick="location.reload()">Reblend</button>
   </div>
-
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
@@ -194,21 +193,11 @@
     let gameRunning = false;
     let currentQuestionIndex = -1;
     let obstacle = null;
+    let correctStreak = 0;
     let questionAnswered = false;
+    let questionTimer = null;
     let obstacleHandled = false;
-
-    const questions = [
-      { q: "What is the capital of France?", options: ["Paris", "Rome", "Berlin", "Madrid"], answer: "Paris" },
-      { q: "What is 5 + 3?", options: ["8", "6", "9", "7"], answer: "8" },
-      { q: "Who painted the Mona Lisa?", options: ["Leonardo da Vinci", "Vincent van Gogh", "Pablo Picasso", "Claude Monet"], answer: "Leonardo da Vinci" },
-      { q: "What is the largest planet?", options: ["Jupiter", "Saturn", "Earth", "Mars"], answer: "Jupiter" },
-      { q: "Who wrote 'Romeo and Juliet'?", options: ["William Shakespeare", "Charles Dickens", "Jane Austen", "Mark Twain"], answer: "William Shakespeare" },
-      { q: "What is the square root of 16?", options: ["4", "8", "16", "2"], answer: "4" },
-      { q: "Which gas do plants absorb from the air?", options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Hydrogen"], answer: "Carbon dioxide" },
-      { q: "What is the boiling point of water?", options: ["100°C", "90°C", "110°C", "120°C"], answer: "100°C" },
-      { q: "What is the capital of Japan?", options: ["Tokyo", "Seoul", "Beijing", "Bangkok"], answer: "Tokyo" },
-      { q: "What is the hardest natural substance?", options: ["Diamond", "Gold", "Iron", "Platinum"], answer: "Diamond" }
-    ];
+    let obstacleSpeed = 2.5;
 
     const player = {
       x: 100,
@@ -254,7 +243,7 @@
 
     function updateObstacle() {
       if (!obstacle) return;
-      obstacle.x -= 2.5;
+      obstacle.x -= obstacleSpeed;
 
       // Jump if answered correctly
       if (obstacle.x < player.x + player.width + 10 && !obstacleHandled && player.grounded) {
@@ -317,6 +306,7 @@
       questionText.textContent = q.q;
       optionsContainer.innerHTML = "";
       questionAnswered = false;
+      obstacleHandled = false;
 
       q.options.forEach(option => {
         const button = document.createElement("button");
@@ -327,49 +317,78 @@
         });
         optionsContainer.appendChild(button);
       });
+
+      questionTimer = setTimeout(() => {
+        if (!questionAnswered) {
+          questionBox.style.display = "none";
+          spawnNextObstacleWithQuestion();
+        }
+      }, 7000);
     }
 
     function checkAnswer(selected, correct) {
+      clearTimeout(questionTimer);
       questionAnswered = true;
       questionBox.style.display = "none";
 
       if (selected === correct) {
+        correctStreak++;
+        if (correctStreak >= 3) {
+          score += 100;
+          correctStreak = 0;
+        }
         score += 10;
         document.getElementById("score").textContent = score;
       } else {
+        correctStreak = 0;
         loseLife();
       }
 
-      // Wait for the obstacle to be handled before moving to the next question
-      spawnObstacle();
+      setTimeout(spawnNextObstacleWithQuestion, 2000);
     }
 
     function spawnNextObstacleWithQuestion() {
+      if (!gameRunning) return;
       spawnObstacle();
       showQuestion();
     }
 
+    const questions = [
+      { q: "What is the capital of France?", options: ["Paris", "Rome", "Berlin", "Madrid"], answer: "Paris" },
+      { q: "What is 5 + 3?", options: ["8", "6", "9", "7"], answer: "8" },
+      { q: "Who painted the Mona Lisa?", options: ["Leonardo da Vinci", "Vincent van Gogh", "Pablo Picasso", "Claude Monet"], answer: "Leonardo da Vinci" },
+      { q: "What is the largest planet?", options: ["Jupiter", "Saturn", "Earth", "Mars"], answer: "Jupiter" },
+      { q: "Who wrote 'Romeo and Juliet'?", options: ["William Shakespeare", "Charles Dickens", "Jane Austen", "Mark Twain"], answer: "William Shakespeare" },
+      { q: "What is the square root of 16?", options: ["4", "8", "16", "2"], answer: "4" },
+      { q: "Which gas do plants absorb from the air?", options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Hydrogen"], answer: "Carbon dioxide" },
+      { q: "What is the boiling point of water?", options: ["100°C", "90°C", "110°C", "120°C"], answer: "100°C" },
+      { q: "What is the capital of Japan?", options: ["Tokyo", "Seoul", "Beijing", "Bangkok"], answer: "Tokyo" },
+      { q: "What is the hardest natural substance?", options: ["Diamond", "Gold", "Iron", "Platinum"], answer: "Diamond" }
+    ];
+
+    document.getElementById("start-btn").addEventListener("click", startGame);
+    window.addEventListener("keydown", (event) => {
+      if (event.key === " " || event.key === "ArrowUp") {
+        player.jump();
+      }
+    });
+
     function gameLoop() {
       if (!gameRunning) return;
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Ground line
+      ctx.fillStyle = "#228B22";
+      ctx.fillRect(0, 340, canvas.width, 60);
 
       player.update();
       player.draw();
       updateObstacle();
       drawObstacle();
 
-      // Continue to next question once the obstacle is handled
-      if (obstacle && obstacle.x < player.x + player.width && player.grounded && obstacleHandled) {
-        // Delay the next question until the obstacle is gone
-        if (!questionAnswered) {
-          showQuestion();
-        }
-      }
-
       requestAnimationFrame(gameLoop);
     }
-
-    document.getElementById("start-btn").addEventListener("click", startGame);
   </script>
 </body>
 </html>

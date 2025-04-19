@@ -181,6 +181,7 @@
     <p>Your score: <span id="final-score"></span></p>
     <button class="btn" onclick="location.reload()">Reblend</button>
   </div>
+
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
@@ -224,6 +225,18 @@
         if (this.grounded) {
           this.vy = this.jumpStrength;
           this.grounded = false;
+          // Add jump effect
+          const jumpEffect = document.createElement("div");
+          jumpEffect.style.position = "absolute";
+          jumpEffect.style.top = `${this.y}px`;
+          jumpEffect.style.left = `${this.x}px`;
+          jumpEffect.style.width = "40px";
+          jumpEffect.style.height = "40px";
+          jumpEffect.style.backgroundColor = "yellow";
+          jumpEffect.style.borderRadius = "50%";
+          jumpEffect.style.animation = "jumpEffect 0.3s";
+          document.body.appendChild(jumpEffect);
+          setTimeout(() => jumpEffect.remove(), 300); // Remove effect after animation
         }
       },
       draw() {
@@ -333,62 +346,4 @@
 
       if (selected === correct) {
         correctStreak++;
-        if (correctStreak >= 3) {
-          score += 100;
-          correctStreak = 0;
-        }
-        score += 10;
-        document.getElementById("score").textContent = score;
-      } else {
-        correctStreak = 0;
-        loseLife();
-      }
-
-      setTimeout(spawnNextObstacleWithQuestion, 2000);
-    }
-
-    function spawnNextObstacleWithQuestion() {
-      if (!gameRunning) return;
-      spawnObstacle();
-      showQuestion();
-    }
-
-    const questions = [
-      { q: "What is the capital of France?", options: ["Paris", "Rome", "Berlin", "Madrid"], answer: "Paris" },
-      { q: "What is 5 + 3?", options: ["8", "6", "9", "7"], answer: "8" },
-      { q: "Who painted the Mona Lisa?", options: ["Leonardo da Vinci", "Vincent van Gogh", "Pablo Picasso", "Claude Monet"], answer: "Leonardo da Vinci" },
-      { q: "What is the largest planet?", options: ["Jupiter", "Saturn", "Earth", "Mars"], answer: "Jupiter" },
-      { q: "Who wrote 'Romeo and Juliet'?", options: ["William Shakespeare", "Charles Dickens", "Jane Austen", "Mark Twain"], answer: "William Shakespeare" },
-      { q: "What is the square root of 16?", options: ["4", "8", "16", "2"], answer: "4" },
-      { q: "Which gas do plants absorb from the air?", options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Hydrogen"], answer: "Carbon dioxide" },
-      { q: "What is the boiling point of water?", options: ["100°C", "90°C", "110°C", "120°C"], answer: "100°C" },
-      { q: "What is the capital of Japan?", options: ["Tokyo", "Seoul", "Beijing", "Bangkok"], answer: "Tokyo" },
-      { q: "What is the hardest natural substance?", options: ["Diamond", "Gold", "Iron", "Platinum"], answer: "Diamond" }
-    ];
-
-    document.getElementById("start-btn").addEventListener("click", startGame);
-    window.addEventListener("keydown", (event) => {
-      if (event.key === " " || event.key === "ArrowUp") {
-        player.jump();
-      }
-    });
-
-    function gameLoop() {
-      if (!gameRunning) return;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Ground line
-      ctx.fillStyle = "#228B22";
-      ctx.fillRect(0, 340, canvas.width, 60);
-
-      player.update();
-      player.draw();
-      updateObstacle();
-      drawObstacle();
-
-      requestAnimationFrame(gameLoop);
-    }
-  </script>
-</body>
-</html>
+        if (correctStreak >= 3

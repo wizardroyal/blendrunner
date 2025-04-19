@@ -304,15 +304,19 @@
     
       obstacle.x -= obstacleSpeed;
     
-      // Only jump if the player is grounded and the obstacle is near
+      // Only jump if the obstacle reaches the player and the question has been answered correctly
       if (obstacle.x < player.x + player.width + 10 && !obstacleHandled && player.grounded) {
         if (questionAnswered) {
-          player.jump();  // Trigger jump only if the question is answered correctly
-          obstacleHandled = true;  // Prevents jumping more than once per obstacle
+          if (questionAnswered && selected === correct) {
+            player.jump();  // Trigger jump only if the question is answered correctly
+            obstacleHandled = true;  // Prevents jumping more than once for the same obstacle
+          } else {
+            obstacleHandled = true;  // If the answer is wrong, avoid jumping and handle collision
+          }
         }
       }
     
-      // Collision logic
+      // Collision logic (if player collides with the obstacle)
       if (
         obstacle &&
         obstacle.x < player.x + player.width &&
@@ -352,8 +356,9 @@
       setTimeout(() => {
         obstacleHandled = false;  // Allow the player to jump again for the next obstacle
         spawnNextObstacleWithQuestion();
-      }, 2000);
+      }, 2000); // Ensure a short delay before showing the next question
     }
+
 
     
     function spawnNextObstacleWithQuestion() {

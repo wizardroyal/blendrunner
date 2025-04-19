@@ -298,45 +298,33 @@
       }, 7000);
     }
 
-    // Adjusted updateObstacle function
     function updateObstacle() {
       if (!obstacle) return;
     
       obstacle.x -= obstacleSpeed;
     
-      // Only jump if the obstacle reaches the player and the question has been answered correctly
       if (obstacle.x < player.x + player.width + 10 && !obstacleHandled && player.grounded) {
-        if (questionAnswered) {
-          if (questionAnswered && lastAnswerCorrect) {
-            player.jump();  // Trigger jump only if the question is answered correctly
-            obstacleHandled = true;  // Prevents jumping more than once for the same obstacle
-          } else {
-            obstacleHandled = true;  // If the answer is wrong, avoid jumping and handle collision
-          }
+        if (questionAnswered && lastAnswerCorrect) {
+          player.jump();
+          obstacleHandled = true;
+        } else {
+          obstacleHandled = true;
         }
       }
     
-      // Collision logic (if player collides with the obstacle)
-      if (
-        obstacle &&
-        obstacle.x < player.x + player.width &&
-        obstacle.x + obstacle.width > player.x &&
-        player.y + player.height > obstacle.y
-      ) {
+      if (obstacle && obstacle.x < player.x + player.width && obstacle.x + obstacle.width > player.x && player.y + player.height > obstacle.y) {
         obstacle = null;
         loseLife();
       }
     
-      // Reset obstacle when it moves off-screen
       if (obstacle && obstacle.x + obstacle.width < 0) {
         obstacle = null;
       }
     }
-    
-    // In checkAnswer function
+
     function checkAnswer(selected, correct) {
       clearTimeout(questionTimer);
-      questionAnswered = true;  // Mark the question as answered
+      questionAnswered = true;
       questionBox.style.display = "none";
     
       if (selected === correct) {
@@ -354,24 +342,19 @@
         loseLife();
       }
     
-      // Reset obstacleHandled and handle the next obstacle/question after a short delay
       setTimeout(() => {
-        obstacleHandled = false;  // Allow the player to jump again for the next obstacle
+        obstacleHandled = false;
         spawnNextObstacleWithQuestion();
-      }, 2000); // Ensure a short delay before showing the next question
+      }, 2000);
     }
     
-    let lastAnswerCorrect = false; // Track whether the last answer was correct
+    let lastAnswerCorrect = false;
 
-
-
-    
     function spawnNextObstacleWithQuestion() {
       if (!gameRunning) return;
       spawnObstacle();
       showQuestion();
     }
-
 
     const questions = [
       { q: "What is the capital of France?", options: ["Paris", "Rome", "Berlin", "Madrid"], answer: "Paris" },
@@ -393,7 +376,6 @@
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Ground line
       ctx.fillStyle = "#228B22";
       ctx.fillRect(0, 340, canvas.width, 60);
 

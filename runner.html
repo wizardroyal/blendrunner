@@ -198,6 +198,7 @@
     let questionTimer = null;
     let obstacleHandled = false;
     let obstacleSpeed = 2.5;
+    let obstaclePassed = false;
 
     const player = {
       x: 100,
@@ -319,6 +320,7 @@
 
       if (obstacle && obstacle.x + obstacle.width < 0) {
         obstacle = null;
+        obstaclePassed = true;
       }
     }
 

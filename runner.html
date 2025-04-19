@@ -367,12 +367,7 @@
     ];
 
     document.getElementById("start-btn").addEventListener("click", startGame);
-    window.addEventListener("keydown", (event) => {
-      if (event.key === " " || event.key === "ArrowUp") {
-        player.jump();
-      }
-    });
-
+  
     function gameLoop() {
       if (!gameRunning) return;
 

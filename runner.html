@@ -5,10 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Quiz Runner</title>
   <style>
+    :root {
+      --primary-color: #4CAF50;
+      --hover-color: #45a049;
+      --background-light: #f0f8ff;
+      --overlay-bg: rgba(255, 255, 255, 0.8);
+      --shadow-light: rgba(0, 0, 0, 0.2);
+      --shadow-heavy: rgba(0, 0, 0, 0.3);
+      --text-dark: #333;
+      --font-main: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      --border-radius: 12px;
+    }
+
     body {
       margin: 0;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f0f8ff;
+      font-family: var(--font-main);
+      background-color: var(--background-light);
       overflow: hidden;
       display: flex;
       justify-content: center;
@@ -19,9 +31,9 @@
     #gameCanvas {
       display: block;
       background: linear-gradient(to top, #87ceeb, #ffffff);
-      border: 5px solid #4CAF50;
+      border: 5px solid var(--primary-color);
       border-radius: 15px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 0 20px var(--shadow-heavy);
     }
 
     #question-box {
@@ -29,17 +41,18 @@
       top: 10px;
       left: 50%;
       transform: translateX(-50%);
-      background-color: rgba(255, 255, 255, 0.8);
-      border-radius: 12px;
+      background-color: var(--overlay-bg);
+      border-radius: var(--border-radius);
       padding: 10px 15px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 0 10px var(--shadow-light);
       max-width: 80%;
       display: none;
+      z-index: 10;
     }
 
     #question-box h3 {
       font-size: 20px;
-      color: #333;
+      color: var(--text-dark);
       margin: 0 0 15px;
     }
 
@@ -51,7 +64,7 @@
 
     .option {
       padding: 12px 24px;
-      background-color: #4CAF50;
+      background-color: var(--primary-color);
       color: white;
       border: none;
       border-radius: 8px;
@@ -61,7 +74,7 @@
     }
 
     .option:hover {
-      background-color: #45a049;
+      background-color: var(--hover-color);
       transform: scale(1.05);
     }
 
@@ -71,11 +84,12 @@
       left: 20px;
       text-align: left;
       font-size: 18px;
-      color: #333;
-      background-color: rgba(255, 255, 255, 0.8);
+      color: var(--text-dark);
+      background-color: var(--overlay-bg);
       padding: 12px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: var(--border-radius);
+      box-shadow: 0 0 10px var(--shadow-light);
+      z-index: 10;
     }
 
     #game-over-box {
@@ -89,7 +103,8 @@
       top: 30%;
       left: 50%;
       transform: translate(-50%, -50%);
-      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      box-shadow: 0 0 20px var(--shadow-light);
+      z-index: 999;
     }
 
     .btn {
@@ -98,14 +113,14 @@
       margin-top: 20px;
       cursor: pointer;
       border: none;
-      border-radius: 10px;
-      background-color: #4CAF50;
+      border-radius: var(--border-radius);
+      background-color: var(--primary-color);
       color: white;
       transition: background-color 0.3s ease, transform 0.1s ease;
     }
 
     .btn:hover {
-      background-color: #45a049;
+      background-color: var(--hover-color);
       transform: scale(1.05);
     }
 
@@ -126,28 +141,28 @@
       text-align: center;
       background: #ffffffb3;
       padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      border-radius: var(--border-radius);
+      box-shadow: 0 0 15px var(--shadow-light);
     }
 
     .start-content h1 {
       margin-bottom: 20px;
       font-size: 36px;
-      color: #333;
+      color: var(--text-dark);
     }
 
     .start-content button {
       padding: 15px 30px;
-      background-color: #4CAF50;
+      background-color: var(--primary-color);
       color: white;
       font-size: 18px;
       border: none;
-      border-radius: 10px;
+      border-radius: var(--border-radius);
       cursor: pointer;
     }
 
     .start-content button:hover {
-      background-color: #45a049;
+      background-color: var(--hover-color);
     }
 
     .flash {
@@ -156,223 +171,40 @@
 
     @keyframes flashRed {
       0% { background-color: #f44336; }
-      100% { background-color: #f0f8ff; }
+      100% { background-color: var(--background-light); }
     }
   </style>
 </head>
 <body>
   <canvas id="gameCanvas" width="800" height="400"></canvas>
+
   <div id="question-box">
     <h3 id="question-text"></h3>
     <div id="options"></div>
   </div>
+
   <div id="scoreboard">
     Score: <span id="score">0</span><br>
     Lives: <span id="lives">3</span>
   </div>
+
   <div id="start-screen">
     <div class="start-content">
       <h1>Quiz Runner</h1>
       <button id="start-btn">Start Game</button>
     </div>
   </div>
+
   <div id="game-over-box">
     <h2>Game Over!</h2>
     <p>Your score: <span id="final-score"></span></p>
     <button class="btn" onclick="location.reload()">Reblend</button>
   </div>
+
   <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    const questionBox = document.getElementById("question-box");
-    const questionText = document.getElementById("question-text");
-    const optionsContainer = document.getElementById("options");
-
-    let score = 0;
-    let lives = 3;
-    let gameRunning = false;
-    let currentQuestionIndex = -1;
-    let obstacle = null;
-    let questionAnswered = false;
-    let obstacleSpeed = 2.5;
-
-    const player = {
-      x: 100,
-      y: 300,
-      width: 40,
-      height: 40,
-      vy: 0,
-      gravity: 1,
-      jumpStrength: -24,
-      grounded: true,
-      update() {
-        this.vy += this.gravity;
-        this.y += this.vy;
-
-        if (this.y >= 300) {
-          this.y = 300;
-          this.vy = 0;
-          this.grounded = true;
-        } else {
-          this.grounded = false;
-        }
-      },
-      jump() {
-        if (this.grounded) {
-          this.vy = this.jumpStrength;
-          this.grounded = false;
-        }
-      },
-      draw() {
-        ctx.fillStyle = "#ff5722";
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-      }
-    };
-
-    function spawnObstacle() {
-      obstacle = {
-        x: canvas.width,
-        y: 320,
-        width: 40,
-        height: 80
-      };
-    }
-
-    function updateObstacle() {
-      if (!obstacle) return;
-      obstacle.x -= obstacleSpeed;
-    
-      // Check if obstacle has reached the player
-      if (
-        obstacle &&
-        obstacle.x < player.x + player.width &&
-        obstacle.x + obstacle.width > player.x
-      ) {
-        // Trigger action only once
-        if (questionAnswered) {
-          // Correct answer: Jump
-          player.jump();
-          obstacle = null; // Remove obstacle after jump
-        } else {
-          // Wrong answer: Collision
-          obstacle = null;
-          loseLife();
-        }
-      }
-    
-      // Reset obstacle when it moves off-screen
-      if (obstacle && obstacle.x + obstacle.width < 0) {
-        obstacle = null;
-      }
-    }
-
-
-    function drawObstacle() {
-      if (!obstacle) return;
-      ctx.fillStyle = "#555";
-      ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-    }
-
-    function loseLife() {
-      lives--;
-      document.getElementById("lives").textContent = lives;
-      if (lives <= 0) {
-        gameOver();
-      }
-    }
-
-    function gameOver() {
-      gameRunning = false;
-      document.getElementById("final-score").textContent = score;
-      document.getElementById("game-over-box").style.display = "block";
-    }
-
-    function startGame() {
-      gameRunning = true;
-      lives = 3;
-      score = 0;
-      document.getElementById("score").textContent = score;
-      document.getElementById("lives").textContent = lives;
-      document.getElementById("start-screen").style.display = "none";
-      spawnNextObstacleWithQuestion();
-      requestAnimationFrame(gameLoop);
-    }
-
-    function showQuestion() {
-      const q = questions[++currentQuestionIndex % questions.length];
-      questionBox.style.display = "block";
-      questionText.textContent = q.q;
-      optionsContainer.innerHTML = "";
-      questionAnswered = false;
-
-      q.options.forEach(option => {
-        const button = document.createElement("button");
-        button.textContent = option;
-        button.classList.add("option");
-        button.addEventListener("click", () => {
-          checkAnswer(option, q.answer);
-        });
-        optionsContainer.appendChild(button);
-      });
-    }
-
-    let correctAnswerChosen = false; // use this instead of questionAnswered
-
-    function checkAnswer(selected, correct) {
-      correctAnswerChosen = (selected === correct);
-      questionBox.style.display = "none";
-    
-      if (correctAnswerChosen) {
-        score += 10;
-        document.getElementById("score").textContent = score;
-      } else {
-        // Life will be lost on collision
-      }
-    
-      // Delay before next obstacle/question
-      setTimeout(() => {
-        spawnNextObstacleWithQuestion();
-      }, 2000);
-    }
-
-
-    function spawnNextObstacleWithQuestion() {
-      if (!gameRunning) return;
-      spawnObstacle();
-      showQuestion();
-    }
-
-    const questions = [
-      { q: "What is the capital of France?", options: ["Paris", "Rome", "Berlin", "Madrid"], answer: "Paris" },
-      { q: "What is 5 + 3?", options: ["8", "6", "9", "7"], answer: "8" },
-      { q: "Who painted the Mona Lisa?", options: ["Leonardo da Vinci", "Vincent van Gogh", "Pablo Picasso", "Claude Monet"], answer: "Leonardo da Vinci" },
-      { q: "What is the largest planet?", options: ["Jupiter", "Saturn", "Earth", "Mars"], answer: "Jupiter" },
-      { q: "Who wrote 'Romeo and Juliet'?", options: ["William Shakespeare", "Charles Dickens", "Jane Austen", "Mark Twain"], answer: "William Shakespeare" },
-      { q: "What is the square root of 16?", options: ["4", "8", "16", "2"], answer: "4" },
-      { q: "Which gas do plants absorb from the air?", options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Hydrogen"], answer: "Carbon dioxide" },
-      { q: "What is the boiling point of water?", options: ["100°C", "90°C", "110°C", "120°C"], answer: "100°C" },
-      { q: "What is the capital of Japan?", options: ["Tokyo", "Seoul", "Beijing", "Bangkok"], answer: "Tokyo" },
-      { q: "What is the hardest natural substance?", options: ["Diamond", "Gold", "Iron", "Platinum"], answer: "Diamond" }
-    ];
-
-    document.getElementById("start-btn").addEventListener("click", startGame);
-
-    function gameLoop() {
-      if (!gameRunning) return;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Ground line
-      ctx.fillStyle = "#228B22";
-      ctx.fillRect(0, 340, canvas.width, 60);
-
-      player.update();
-      player.draw();
-      updateObstacle();
-      drawObstacle();
-
-      requestAnimationFrame(gameLoop);
-    }
+    document.addEventListener("keydown", (e) => {
+      e.preventDefault(); // disables spacebar scrolling
+    });
   </script>
 </body>
 </html>

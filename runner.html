@@ -240,7 +240,7 @@
         height: 80
       };
     }
-    
+
     function drawObstacle() {
       if (!obstacle) return;
       ctx.fillStyle = "#555";
@@ -300,23 +300,21 @@
 
     function updateObstacle() {
       if (!obstacle) return;
-    
+
       obstacle.x -= obstacleSpeed;
-    
+
       if (obstacle.x < player.x + player.width + 10 && !obstacleHandled && player.grounded) {
-        if (questionAnswered && lastAnswerCorrect) {
-          player.jump();
-          obstacleHandled = true;
-        } else {
+        // Wait until the obstacle reaches the player before handling the jump/collision
+        if (questionAnswered) {
+          if (lastAnswerCorrect) {
+            player.jump();
+          } else {
+            loseLife();
+          }
           obstacleHandled = true;
         }
       }
-    
-      if (obstacle && obstacle.x < player.x + player.width && obstacle.x + obstacle.width > player.x && player.y + player.height > obstacle.y) {
-        obstacle = null;
-        loseLife();
-      }
-    
+
       if (obstacle && obstacle.x + obstacle.width < 0) {
         obstacle = null;
       }
@@ -326,9 +324,9 @@
       clearTimeout(questionTimer);
       questionAnswered = true;
       questionBox.style.display = "none";
-    
-      if (selected === correct) {
-        lastAnswerCorrect = true;
+
+      lastAnswerCorrect = selected === correct;
+      if (lastAnswerCorrect) {
         correctStreak++;
         if (correctStreak >= 3) {
           score += 100;
@@ -337,17 +335,15 @@
         score += 10;
         document.getElementById("score").textContent = score;
       } else {
-        lastAnswerCorrect = false;
         correctStreak = 0;
         loseLife();
       }
-    
+
       setTimeout(() => {
-        obstacleHandled = false;
         spawnNextObstacleWithQuestion();
       }, 2000);
     }
-    
+
     let lastAnswerCorrect = false;
 
     function spawnNextObstacleWithQuestion() {
@@ -370,7 +366,7 @@
     ];
 
     document.getElementById("start-btn").addEventListener("click", startGame);
-  
+
     function gameLoop() {
       if (!gameRunning) return;
 

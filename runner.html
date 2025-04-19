@@ -181,9 +181,15 @@
     <p>Your score: <span id="final-score"></span></p>
     <button class="btn" onclick="location.reload()">Reblend</button>
   </div>
+
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+
+    // Fancy sprite
+    const playerImg = new Image();
+    playerImg.src = "https://i.imgur.com/NXxvMTZ.png"; // Swap this for your preferred sprite!
+
     const questionBox = document.getElementById("question-box");
     const questionText = document.getElementById("question-text");
     const optionsContainer = document.getElementById("options");
@@ -202,8 +208,8 @@
     const player = {
       x: 100,
       y: 300,
-      width: 40,
-      height: 40,
+      width: 50,
+      height: 60,
       vy: 0,
       gravity: 1.5,
       jumpStrength: -22,
@@ -227,78 +233,22 @@
         }
       },
       draw() {
-        ctx.fillStyle = "#ff5722";
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.drawImage(playerImg, this.x, this.y, this.width, this.height);
       }
     };
 
-    function spawnObstacle() {
-      obstacle = {
-        x: canvas.width,
-        y: 320,
-        width: 40,
-        height: 80
-      };
-    }
-
-    function updateObstacle() {
-      if (!obstacle) return;
-      obstacle.x -= obstacleSpeed;
-
-      // Jump if answered correctly
-      if (obstacle.x < player.x + player.width + 10 && !obstacleHandled && player.grounded) {
-        if (questionAnswered) {
-          player.jump();
-        }
-        obstacleHandled = true;
-      }
-
-      // Collision
-      if (
-        obstacle &&
-        obstacle.x < player.x + player.width &&
-        obstacle.x + obstacle.width > player.x &&
-        player.y + player.height > obstacle.y
-      ) {
-        obstacle = null;
-        loseLife();
-      }
-
-      if (obstacle && obstacle.x + obstacle.width < 0) {
-        obstacle = null;
-      }
-    }
-
-    function drawObstacle() {
-      if (!obstacle) return;
-      ctx.fillStyle = "#555";
-      ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-    }
-
-    function loseLife() {
-      lives--;
-      document.getElementById("lives").textContent = lives;
-      if (lives <= 0) {
-        gameOver();
-      }
-    }
-
-    function gameOver() {
-      gameRunning = false;
-      document.getElementById("final-score").textContent = score;
-      document.getElementById("game-over-box").style.display = "block";
-    }
-
-    function startGame() {
-      gameRunning = true;
-      lives = 3;
-      score = 0;
-      document.getElementById("score").textContent = score;
-      document.getElementById("lives").textContent = lives;
-      document.getElementById("start-screen").style.display = "none";
-      spawnNextObstacleWithQuestion();
-      requestAnimationFrame(gameLoop);
-    }
+    const questions = [
+      { q: "What is the capital of France?", options: ["Paris", "Rome", "Berlin", "Madrid"], answer: "Paris" },
+      { q: "What is 5 + 3?", options: ["8", "6", "9", "7"], answer: "8" },
+      { q: "Who painted the Mona Lisa?", options: ["Leonardo da Vinci", "Vincent van Gogh", "Pablo Picasso", "Claude Monet"], answer: "Leonardo da Vinci" },
+      { q: "What is the largest planet?", options: ["Jupiter", "Saturn", "Earth", "Mars"], answer: "Jupiter" },
+      { q: "Who wrote 'Romeo and Juliet'?", options: ["William Shakespeare", "Charles Dickens", "Jane Austen", "Mark Twain"], answer: "William Shakespeare" },
+      { q: "What is the square root of 16?", options: ["4", "8", "16", "2"], answer: "4" },
+      { q: "Which gas do plants absorb from the air?", options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Hydrogen"], answer: "Carbon dioxide" },
+      { q: "What is the boiling point of water?", options: ["100°C", "90°C", "110°C", "120°C"], answer: "100°C" },
+      { q: "What is the capital of Japan?", options: ["Tokyo", "Seoul", "Beijing", "Bangkok"], answer: "Tokyo" },
+      { q: "What is the hardest natural substance?", options: ["Diamond", "Gold", "Iron", "Platinum"], answer: "Diamond" }
+    ];
 
     function showQuestion() {
       const q = questions[++currentQuestionIndex % questions.length];
@@ -339,12 +289,14 @@
         }
         score += 10;
         document.getElementById("score").textContent = score;
+        obstacleHandled = true;
+        setTimeout(spawnNextObstacleWithQuestion, 2000);
       } else {
         correctStreak = 0;
         loseLife();
+        obstacleHandled = true;
+        setTimeout(spawnNextObstacleWithQuestion, 2000);
       }
-
-      setTimeout(spawnNextObstacleWithQuestion, 2000);
     }
 
     function spawnNextObstacleWithQuestion() {
@@ -353,18 +305,67 @@
       showQuestion();
     }
 
-    const questions = [
-      { q: "What is the capital of France?", options: ["Paris", "Rome", "Berlin", "Madrid"], answer: "Paris" },
-      { q: "What is 5 + 3?", options: ["8", "6", "9", "7"], answer: "8" },
-      { q: "Who painted the Mona Lisa?", options: ["Leonardo da Vinci", "Vincent van Gogh", "Pablo Picasso", "Claude Monet"], answer: "Leonardo da Vinci" },
-      { q: "What is the largest planet?", options: ["Jupiter", "Saturn", "Earth", "Mars"], answer: "Jupiter" },
-      { q: "Who wrote 'Romeo and Juliet'?", options: ["William Shakespeare", "Charles Dickens", "Jane Austen", "Mark Twain"], answer: "William Shakespeare" },
-      { q: "What is the square root of 16?", options: ["4", "8", "16", "2"], answer: "4" },
-      { q: "Which gas do plants absorb from the air?", options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Hydrogen"], answer: "Carbon dioxide" },
-      { q: "What is the boiling point of water?", options: ["100°C", "90°C", "110°C", "120°C"], answer: "100°C" },
-      { q: "What is the capital of Japan?", options: ["Tokyo", "Seoul", "Beijing", "Bangkok"], answer: "Tokyo" },
-      { q: "What is the hardest natural substance?", options: ["Diamond", "Gold", "Iron", "Platinum"], answer: "Diamond" }
-    ];
+    function spawnObstacle() {
+      obstacle = {
+        x: canvas.width,
+        y: 320,
+        width: 40,
+        height: 80
+      };
+    }
+
+    function updateObstacle() {
+      if (!obstacle) return;
+      obstacle.x -= obstacleSpeed;
+
+      if (obstacle.x < player.x + player.width + 10 && !obstacleHandled && player.grounded) {
+        if (questionAnswered) {
+          player.jump();
+        }
+      }
+
+      if (
+        obstacle.x < player.x + player.width &&
+        obstacle.x + obstacle.width > player.x &&
+        player.y + player.height > obstacle.y
+      ) {
+        obstacle = null;
+        loseLife();
+      }
+
+      if (obstacle && obstacle.x + obstacle.width < 0) {
+        obstacle = null;
+      }
+
+      // Draw the obstacle
+      ctx.fillStyle = "#000";
+      ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+    }
+
+    function loseLife() {
+      lives--;
+      document.getElementById("lives").textContent = lives;
+      if (lives <= 0) {
+        gameOver();
+      }
+    }
+
+    function gameOver() {
+      gameRunning = false;
+      document.getElementById("final-score").textContent = score;
+      document.getElementById("game-over-box").style.display = "block";
+    }
+
+    function startGame() {
+      gameRunning = true;
+      lives = 3;
+      score = 0;
+      document.getElementById("score").textContent = score;
+      document.getElementById("lives").textContent = lives;
+      document.getElementById("start-screen").style.display = "none";
+      spawnNextObstacleWithQuestion();
+      requestAnimationFrame(animate); // Re-start the game loop
+    }
 
     document.getElementById("start-btn").addEventListener("click", startGame);
     window.addEventListener("keydown", (event) => {
@@ -373,22 +374,15 @@
       }
     });
 
-    function gameLoop() {
+    function animate() {
       if (!gameRunning) return;
-
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Ground line
-      ctx.fillStyle = "#228B22";
-      ctx.fillRect(0, 340, canvas.width, 60);
-
       player.update();
       player.draw();
       updateObstacle();
-      drawObstacle();
-
-      requestAnimationFrame(gameLoop);
+      requestAnimationFrame(animate);
     }
+
   </script>
 </body>
 </html>

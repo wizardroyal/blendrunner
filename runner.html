@@ -307,7 +307,7 @@
       // Only jump if the obstacle reaches the player and the question has been answered correctly
       if (obstacle.x < player.x + player.width + 10 && !obstacleHandled && player.grounded) {
         if (questionAnswered) {
-          if (questionAnswered && selected === correct) {
+          if (questionAnswered && lastAnswerCorrect) {
             player.jump();  // Trigger jump only if the question is answered correctly
             obstacleHandled = true;  // Prevents jumping more than once for the same obstacle
           } else {
@@ -340,6 +340,7 @@
       questionBox.style.display = "none";
     
       if (selected === correct) {
+        lastAnswerCorrect = true;
         correctStreak++;
         if (correctStreak >= 3) {
           score += 100;
@@ -348,6 +349,7 @@
         score += 10;
         document.getElementById("score").textContent = score;
       } else {
+        lastAnswerCorrect = false;
         correctStreak = 0;
         loseLife();
       }
@@ -358,6 +360,9 @@
         spawnNextObstacleWithQuestion();
       }, 2000); // Ensure a short delay before showing the next question
     }
+    
+    let lastAnswerCorrect = false; // Track whether the last answer was correct
+
 
 
     

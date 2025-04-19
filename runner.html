@@ -43,6 +43,7 @@
       color: white;
       border: none;
       border-radius: 5px;
+      margin: 10px;
     }
   </style>
 </head>
@@ -66,7 +67,6 @@
     let obstacles = [];
     let currentQuestion = null;
     let questionTimeout;
-    let effectTimeout;
 
     // Player class
     class Player {
@@ -211,19 +211,12 @@
       }
     }
 
-    // Handle keyboard input for jump
-    window.addEventListener("keydown", (e) => {
-      if (e.code === "Space") {
-        e.preventDefault();  // Prevents spacebar from triggering jumps
-      }
-    });
-
     // Show question and handle answer
     function showQuestion(question, options) {
       clearTimeout(questionTimeout);
       currentQuestion = question;
 
-      // Handle option selection
+      // Display options and handle click
       options.forEach((option, index) => {
         const button = document.createElement("button");
         button.innerText = option;
@@ -243,7 +236,7 @@
       if (isCorrect) {
         score += 10;
         correctStreak++;
-        player.jump();
+        player.jump(); // Jump only after a correct answer
       } else {
         lives--;
         if (lives <= 0) {
@@ -253,6 +246,15 @@
 
       document.getElementById("score").innerText = score;
       document.getElementById("lives").innerText = lives;
+
+      // Optionally show next question after a short delay
+      setTimeout(() => {
+        showQuestion({
+          question: "What is 3 + 3?",
+          options: ["5", "6", "7"],
+          correctAnswer: "6"
+        });
+      }, 1000);
     }
 
     // Start game
@@ -261,7 +263,7 @@
       spawnObstacle();
       gameLoop();
 
-      // Start by showing a question after 2 seconds
+      // Start by showing the first question
       setTimeout(() => {
         showQuestion({
           question: "What is 2 + 2?",

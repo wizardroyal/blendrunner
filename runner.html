@@ -24,23 +24,21 @@
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
     }
 
-    #question-box {
+    #question-box, #scoreboard, #game-over-box {
       position: absolute;
+      font-family: sans-serif;
+    }
+
+    #question-box {
       top: 10px;
       left: 50%;
       transform: translateX(-50%);
-      background-color: rgba(255, 255, 255, 0.8);
+      background-color: rgba(255, 255, 255, 0.85);
       border-radius: 12px;
       padding: 10px 15px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
       max-width: 80%;
       display: none;
-    }
-
-    #question-box h3 {
-      font-size: 20px;
-      color: #333;
-      margin: 0 0 15px;
     }
 
     #options {
@@ -57,7 +55,6 @@
       border-radius: 8px;
       cursor: pointer;
       transition: background-color 0.3s, transform 0.1s;
-      text-align: center;
     }
 
     .option:hover {
@@ -66,12 +63,8 @@
     }
 
     #scoreboard {
-      position: absolute;
       top: 20px;
       left: 20px;
-      text-align: left;
-      font-size: 18px;
-      color: #333;
       background-color: rgba(255, 255, 255, 0.8);
       padding: 12px;
       border-radius: 10px;
@@ -79,16 +72,15 @@
     }
 
     #game-over-box {
-      text-align: center;
-      display: none;
-      padding: 25px;
-      background: #fff;
-      border: 2px solid #444;
-      border-radius: 15px;
-      position: absolute;
       top: 30%;
       left: 50%;
       transform: translate(-50%, -50%);
+      background: #fff;
+      border: 2px solid #444;
+      border-radius: 15px;
+      padding: 25px;
+      text-align: center;
+      display: none;
       box-shadow: 0 0 20px rgba(0,0,0,0.2);
     }
 
@@ -101,12 +93,6 @@
       border-radius: 10px;
       background-color: #4CAF50;
       color: white;
-      transition: background-color 0.3s ease, transform 0.1s ease;
-    }
-
-    .btn:hover {
-      background-color: #45a049;
-      transform: scale(1.05);
     }
 
     #start-screen {
@@ -122,51 +108,45 @@
       z-index: 999;
     }
 
-    .start-content {
-      text-align: center;
-      background: #ffffffb3;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-    }
-
-    .start-content h1 {
-      margin-bottom: 20px;
-      font-size: 36px;
-      color: #333;
-    }
-
-    .start-content button {
-      padding: 15px 30px;
-      background-color: #4CAF50;
-      color: white;
-      font-size: 18px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-
-    .start-content button:hover {
-      background-color: #45a049;
-    }
-
     .perfect-jump {
-      animation: jumpGlow 0.5s ease-out;
+      position: absolute;
+      color: gold;
+      font-size: 24px;
+      font-weight: bold;
+      animation: riseUp 1s ease-out forwards;
+      left: 120px;
+      top: 280px;
+      z-index: 10;
     }
 
-    @keyframes jumpGlow {
-      0% { box-shadow: 0 0 0px 0px #00ff80; }
-      100% { box-shadow: 0 0 20px 10px #00ff80; }
+    @keyframes riseUp {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-50px); }
     }
 
     .splat {
-      animation: splatAnim 0.3s forwards;
+      width: 40px;
+      height: 40px;
+      background: red;
+      border-radius: 50%;
+      position: absolute;
+      left: 100px;
+      top: 300px;
+      animation: squish 0.4s ease-in-out;
     }
 
-    @keyframes splatAnim {
+    @keyframes squish {
       0% { transform: scale(1); }
-      100% { transform: scale(1.5, 0.5); background-color: red; }
+      50% { transform: scale(1.5, 0.5); }
+      100% { transform: scale(1); opacity: 0; }
     }
+
+    .player {
+      background: radial-gradient(circle, #ff5722 40%, #ff784e 100%);
+      border: 2px solid #fff;
+      border-radius: 50%;
+    }
+
   </style>
 </head>
 <body>
@@ -201,32 +181,18 @@
     const questionBox = document.getElementById("question-box");
     const questionText = document.getElementById("question-text");
     const optionsContainer = document.getElementById("options");
+    const startBtn = document.getElementById("start-btn");
 
-    let score = 0;
-    let lives = 3;
-    let gameRunning = false;
+    let score = 0, lives = 3, gameRunning = false;
     let currentQuestionIndex = -1;
-    let obstacle = null;
-    let correctStreak = 0;
-    let questionAnswered = false;
-    let answerWasCorrect = false;
-    let obstacleHandled = false;
-    let obstacleSpeed = 3;
+    let obstacle = null, questionAnswered = false, answeredCorrectly = false;
 
     const player = {
-      x: 100,
-      y: 300,
-      width: 40,
-      height: 40,
-      vy: 0,
-      gravity: 1.5,
-      jumpStrength: -22,
-      grounded: true,
-      color: "#ff5722",
+      x: 100, y: 300, width: 40, height: 40,
+      vy: 0, gravity: 1.5, jumpStrength: -22, grounded: true,
       update() {
         this.vy += this.gravity;
         this.y += this.vy;
-
         if (this.y >= 300) {
           this.y = 300;
           this.vy = 0;
@@ -236,61 +202,52 @@
         }
       },
       jump() {
-        if (this.grounded) {
-          this.vy = this.jumpStrength;
-          this.grounded = false;
-          canvas.classList.add("perfect-jump");
-          setTimeout(() => canvas.classList.remove("perfect-jump"), 300);
-        }
+        this.vy = this.jumpStrength;
       },
       draw() {
-        ctx.fillStyle = this.color;
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.fillStyle = "#ff5722";
+        ctx.beginPath();
+        ctx.arc(this.x + 20, this.y + 20, 20, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#fff";
+        ctx.stroke();
       }
     };
 
     const questions = [
-      { q: "Capital of France?", options: ["Paris", "Rome"], answer: "Paris" },
-      { q: "5 + 3?", options: ["8", "9"], answer: "8" },
-      { q: "Mona Lisa artist?", options: ["da Vinci", "Picasso"], answer: "da Vinci" },
-      { q: "Largest planet?", options: ["Jupiter", "Earth"], answer: "Jupiter" },
-      { q: "Boiling point of water?", options: ["100°C", "90°C"], answer: "100°C" }
+      { q: "Capital of France?", options: ["Paris", "Rome", "Berlin", "Madrid"], answer: "Paris" },
+      { q: "5 + 3?", options: ["8", "6", "9", "7"], answer: "8" },
+      { q: "Painted Mona Lisa?", options: ["da Vinci", "van Gogh", "Picasso", "Monet"], answer: "da Vinci" },
+      { q: "Largest planet?", options: ["Jupiter", "Saturn", "Earth", "Mars"], answer: "Jupiter" },
+      { q: "Wrote 'Romeo and Juliet'?", options: ["Shakespeare", "Dickens", "Austen", "Twain"], answer: "Shakespeare" },
+      { q: "√16?", options: ["4", "8", "16", "2"], answer: "4" },
+      { q: "Gas plants absorb?", options: ["CO2", "Oxygen", "Nitrogen", "Hydrogen"], answer: "CO2" },
+      { q: "Boiling point water?", options: ["100°C", "90°C", "110°C", "120°C"], answer: "100°C" },
+      { q: "Capital of Japan?", options: ["Tokyo", "Seoul", "Beijing", "Bangkok"], answer: "Tokyo" },
+      { q: "Hardest natural substance?", options: ["Diamond", "Gold", "Iron", "Platinum"], answer: "Diamond" }
     ];
 
     function showQuestion() {
       const q = questions[++currentQuestionIndex % questions.length];
-      questionBox.style.display = "block";
       questionText.textContent = q.q;
       optionsContainer.innerHTML = "";
+      questionBox.style.display = "block";
       questionAnswered = false;
-      answerWasCorrect = false;
-      obstacleHandled = false;
+      answeredCorrectly = false;
 
       q.options.forEach(option => {
-        const button = document.createElement("button");
-        button.textContent = option;
-        button.classList.add("option");
-        button.addEventListener("click", () => checkAnswer(option, q.answer));
-        optionsContainer.appendChild(button);
+        const btn = document.createElement("button");
+        btn.classList.add("option");
+        btn.textContent = option;
+        btn.onclick = () => {
+          questionBox.style.display = "none";
+          questionAnswered = true;
+          if (option === q.answer) {
+            answeredCorrectly = true;
+          }
+        };
+        optionsContainer.appendChild(btn);
       });
-    }
-
-    function checkAnswer(selected, correct) {
-      questionAnswered = true;
-      answerWasCorrect = selected === correct;
-      questionBox.style.display = "none";
-
-      if (answerWasCorrect) {
-        correctStreak++;
-        if (correctStreak >= 3) {
-          score += 100;
-          correctStreak = 0;
-        }
-        score += 10;
-        document.getElementById("score").textContent = score;
-      } else {
-        correctStreak = 0;
-      }
     }
 
     function spawnObstacle() {
@@ -299,74 +256,56 @@
 
     function updateObstacle() {
       if (!obstacle) return;
-      obstacle.x -= obstacleSpeed;
+      obstacle.x -= 3;
 
       if (
-        obstacle.x < player.x + player.width + 5 &&
-        !obstacleHandled &&
-        player.grounded
+        obstacle.x < player.x + player.width &&
+        obstacle.x + obstacle.width > player.x &&
+        player.y + player.height > obstacle.y
       ) {
-        if (answerWasCorrect) {
+        if (answeredCorrectly) {
           player.jump();
+          showPerfectJump();
         } else {
-          triggerSplat();
+          showSplat();
           loseLife();
         }
-        obstacleHandled = true;
-        setTimeout(() => {
-          obstacle = null;
-          if (gameRunning) spawnNext();
-        }, 1500);
-      }
-
-      if (obstacle && obstacle.x + obstacle.width < 0) {
         obstacle = null;
+        setTimeout(() => {
+          if (lives > 0) {
+            showQuestion();
+            spawnObstacle();
+          }
+        }, 2000);
       }
-
-      // draw obstacle
-      ctx.fillStyle = "#444";
-      ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
     }
 
-    function triggerSplat() {
-      canvas.classList.add("splat");
-      setTimeout(() => canvas.classList.remove("splat"), 300);
+    function showPerfectJump() {
+      const tag = document.createElement("div");
+      tag.className = "perfect-jump";
+      tag.textContent = "Perfect Jump!";
+      document.body.appendChild(tag);
+      setTimeout(() => tag.remove(), 1000);
+    }
+
+    function showSplat() {
+      const splat = document.createElement("div");
+      splat.className = "splat";
+      document.body.appendChild(splat);
+      setTimeout(() => splat.remove(), 400);
     }
 
     function loseLife() {
       lives--;
       document.getElementById("lives").textContent = lives;
-      if (lives <= 0) {
-        gameOver();
-      }
+      if (lives <= 0) endGame();
     }
 
-    function gameOver() {
+    function endGame() {
       gameRunning = false;
       document.getElementById("final-score").textContent = score;
       document.getElementById("game-over-box").style.display = "block";
     }
-
-    function spawnNext() {
-      showQuestion();
-      spawnObstacle();
-    }
-
-    function startGame() {
-      gameRunning = true;
-      lives = 3;
-      score = 0;
-      document.getElementById("score").textContent = score;
-      document.getElementById("lives").textContent = lives;
-      document.getElementById("start-screen").style.display = "none";
-      spawnNext();
-      requestAnimationFrame(animate);
-    }
-
-    document.getElementById("start-btn").addEventListener("click", startGame);
-    window.addEventListener("keydown", (e) => {
-      e.preventDefault(); // disable keyboard jump
-    });
 
     function animate() {
       if (!gameRunning) return;
@@ -376,6 +315,28 @@
       updateObstacle();
       requestAnimationFrame(animate);
     }
+
+    function startGame() {
+      document.getElementById("start-screen").style.display = "none";
+      gameRunning = true;
+      score = 0;
+      lives = 3;
+      document.getElementById("score").textContent = score;
+      document.getElementById("lives").textContent = lives;
+      showQuestion();
+      spawnObstacle();
+      animate();
+    }
+
+    startBtn.onclick = startGame;
+
+    // 🔒 Prevent spacebar jump
+    window.addEventListener("keydown", e => {
+      if ([" ", "ArrowUp"].includes(e.key)) {
+        e.preventDefault();
+      }
+    });
+
   </script>
 </body>
 </html>

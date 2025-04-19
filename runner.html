@@ -24,21 +24,23 @@
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
     }
 
-    #question-box, #scoreboard, #game-over-box, #start-screen {
-      position: absolute;
-      z-index: 10;
-    }
-
     #question-box {
+      position: absolute;
       top: 10px;
       left: 50%;
       transform: translateX(-50%);
-      background-color: rgba(255, 255, 255, 0.9);
+      background-color: rgba(255, 255, 255, 0.8);
       border-radius: 12px;
       padding: 10px 15px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
       max-width: 80%;
       display: none;
+    }
+
+    #question-box h3 {
+      font-size: 20px;
+      color: #333;
+      margin: 0 0 15px;
     }
 
     #options {
@@ -64,8 +66,10 @@
     }
 
     #scoreboard {
+      position: absolute;
       top: 20px;
       left: 20px;
+      text-align: left;
       font-size: 18px;
       color: #333;
       background-color: rgba(255, 255, 255, 0.8);
@@ -81,6 +85,7 @@
       background: #fff;
       border: 2px solid #444;
       border-radius: 15px;
+      position: absolute;
       top: 30%;
       left: 50%;
       transform: translate(-50%, -50%);
@@ -105,6 +110,7 @@
     }
 
     #start-screen {
+      position: absolute;
       top: 0;
       left: 0;
       height: 100vh;
@@ -144,223 +150,232 @@
       background-color: #45a049;
     }
 
-    #effect {
-      position: absolute;
-      font-size: 28px;
-      font-weight: bold;
-      color: gold;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      display: none;
-      text-shadow: 2px 2px 5px black;
+    .perfect-jump {
+      animation: jumpGlow 0.5s ease-out;
+    }
+
+    @keyframes jumpGlow {
+      0% { box-shadow: 0 0 0px 0px #00ff80; }
+      100% { box-shadow: 0 0 20px 10px #00ff80; }
+    }
+
+    .splat {
+      animation: splatAnim 0.3s forwards;
+    }
+
+    @keyframes splatAnim {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.5, 0.5); background-color: red; }
     }
   </style>
 </head>
 <body>
-<canvas id="gameCanvas" width="800" height="400"></canvas>
-<div id="question-box">
-  <h3 id="question-text"></h3>
-  <div id="options"></div>
-</div>
-<div id="scoreboard">Score: <span id="score">0</span><br>Lives: <span id="lives">3</span></div>
-<div id="start-screen">
-  <div class="start-content">
-    <h1>Quiz Runner</h1>
-    <button id="start-btn">Start Game</button>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+  <div id="question-box">
+    <h3 id="question-text"></h3>
+    <div id="options"></div>
   </div>
-</div>
-<div id="game-over-box">
-  <h2>Game Over!</h2>
-  <p>Your score: <span id="final-score"></span></p>
-  <button class="btn" onclick="location.reload()">Reblend</button>
-</div>
-<div id="effect"></div>
-<script>
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-const questionBox = document.getElementById("question-box");
-const questionText = document.getElementById("question-text");
-const optionsContainer = document.getElementById("options");
-const effectDiv = document.getElementById("effect");
 
-let score = 0;
-let lives = 3;
-let gameRunning = false;
-let currentQuestionIndex = -1;
-let obstacle = null;
-let questionAnswered = false;
-let answeredCorrectly = false;
-let obstacleHandled = false;
-let obstacleSpeed = 3;
+  <div id="scoreboard">
+    Score: <span id="score">0</span><br>
+    Lives: <span id="lives">3</span>
+  </div>
 
-const player = {
-  x: 100,
-  y: 300,
-  width: 40,
-  height: 40,
-  vy: 0,
-  gravity: 1.5,
-  jumpStrength: -22,
-  grounded: true,
-  update() {
-    this.vy += this.gravity;
-    this.y += this.vy;
+  <div id="start-screen">
+    <div class="start-content">
+      <h1>Quiz Runner</h1>
+      <button id="start-btn">Start Game</button>
+    </div>
+  </div>
 
-    if (this.y >= 300) {
-      this.y = 300;
-      this.vy = 0;
-      this.grounded = true;
-    } else {
-      this.grounded = false;
+  <div id="game-over-box">
+    <h2>Game Over!</h2>
+    <p>Your score: <span id="final-score"></span></p>
+    <button class="btn" onclick="location.reload()">Reblend</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const questionBox = document.getElementById("question-box");
+    const questionText = document.getElementById("question-text");
+    const optionsContainer = document.getElementById("options");
+
+    let score = 0;
+    let lives = 3;
+    let gameRunning = false;
+    let currentQuestionIndex = -1;
+    let obstacle = null;
+    let correctStreak = 0;
+    let questionAnswered = false;
+    let answerWasCorrect = false;
+    let obstacleHandled = false;
+    let obstacleSpeed = 3;
+
+    const player = {
+      x: 100,
+      y: 300,
+      width: 40,
+      height: 40,
+      vy: 0,
+      gravity: 1.5,
+      jumpStrength: -22,
+      grounded: true,
+      color: "#ff5722",
+      update() {
+        this.vy += this.gravity;
+        this.y += this.vy;
+
+        if (this.y >= 300) {
+          this.y = 300;
+          this.vy = 0;
+          this.grounded = true;
+        } else {
+          this.grounded = false;
+        }
+      },
+      jump() {
+        if (this.grounded) {
+          this.vy = this.jumpStrength;
+          this.grounded = false;
+          canvas.classList.add("perfect-jump");
+          setTimeout(() => canvas.classList.remove("perfect-jump"), 300);
+        }
+      },
+      draw() {
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+      }
+    };
+
+    const questions = [
+      { q: "Capital of France?", options: ["Paris", "Rome"], answer: "Paris" },
+      { q: "5 + 3?", options: ["8", "9"], answer: "8" },
+      { q: "Mona Lisa artist?", options: ["da Vinci", "Picasso"], answer: "da Vinci" },
+      { q: "Largest planet?", options: ["Jupiter", "Earth"], answer: "Jupiter" },
+      { q: "Boiling point of water?", options: ["100°C", "90°C"], answer: "100°C" }
+    ];
+
+    function showQuestion() {
+      const q = questions[++currentQuestionIndex % questions.length];
+      questionBox.style.display = "block";
+      questionText.textContent = q.q;
+      optionsContainer.innerHTML = "";
+      questionAnswered = false;
+      answerWasCorrect = false;
+      obstacleHandled = false;
+
+      q.options.forEach(option => {
+        const button = document.createElement("button");
+        button.textContent = option;
+        button.classList.add("option");
+        button.addEventListener("click", () => checkAnswer(option, q.answer));
+        optionsContainer.appendChild(button);
+      });
     }
-  },
-  jump() {
-    this.vy = this.jumpStrength;
-    this.grounded = false;
-    showEffect("Perfect Jump!");
-  },
-  draw() {
-    ctx.fillStyle = "#3498db";
-    ctx.beginPath();
-    ctx.arc(this.x + this.width / 2, this.y + this.height / 2, 20, 0, Math.PI * 2);
-    ctx.fill();
 
-    // Eyes
-    ctx.fillStyle = "#fff";
-    ctx.beginPath();
-    ctx.arc(this.x + 12, this.y + 15, 5, 0, Math.PI * 2);
-    ctx.arc(this.x + 28, this.y + 15, 5, 0, Math.PI * 2);
-    ctx.fill();
+    function checkAnswer(selected, correct) {
+      questionAnswered = true;
+      answerWasCorrect = selected === correct;
+      questionBox.style.display = "none";
 
-    ctx.fillStyle = "#000";
-    ctx.beginPath();
-    ctx.arc(this.x + 12, this.y + 15, 2, 0, Math.PI * 2);
-    ctx.arc(this.x + 28, this.y + 15, 2, 0, Math.PI * 2);
-    ctx.fill();
-  }
-};
-
-const questions = [
-  { q: "What is the capital of France?", options: ["Paris", "Rome", "Berlin", "Madrid"], answer: "Paris" },
-  { q: "What is 5 + 3?", options: ["8", "6", "9", "7"], answer: "8" },
-  { q: "Who painted the Mona Lisa?", options: ["Leonardo da Vinci", "Van Gogh", "Picasso", "Monet"], answer: "Leonardo da Vinci" }
-];
-
-function showQuestion() {
-  const q = questions[++currentQuestionIndex % questions.length];
-  questionBox.style.display = "block";
-  questionText.textContent = q.q;
-  optionsContainer.innerHTML = "";
-  questionAnswered = false;
-  answeredCorrectly = false;
-  obstacleHandled = false;
-
-  q.options.forEach(option => {
-    const button = document.createElement("button");
-    button.textContent = option;
-    button.classList.add("option");
-    button.addEventListener("click", () => checkAnswer(option, q.answer));
-    optionsContainer.appendChild(button);
-  });
-}
-
-function checkAnswer(selected, correct) {
-  questionAnswered = true;
-  answeredCorrectly = selected === correct;
-  questionBox.style.display = "none";
-}
-
-function spawnObstacle() {
-  obstacle = {
-    x: canvas.width,
-    y: 320,
-    width: 40,
-    height: 80
-  };
-}
-
-function updateObstacle() {
-  if (!obstacle) return;
-
-  obstacle.x -= obstacleSpeed;
-
-  if (
-    obstacle.x < player.x + player.width &&
-    obstacle.x + obstacle.width > player.x &&
-    player.y + player.height > obstacle.y &&
-    !obstacleHandled
-  ) {
-    if (questionAnswered && answeredCorrectly) {
-      player.jump();
-    } else {
-      loseLife();
-      showEffect("Splat!", "red");
+      if (answerWasCorrect) {
+        correctStreak++;
+        if (correctStreak >= 3) {
+          score += 100;
+          correctStreak = 0;
+        }
+        score += 10;
+        document.getElementById("score").textContent = score;
+      } else {
+        correctStreak = 0;
+      }
     }
-    obstacleHandled = true;
-    obstacle = null;
-    setTimeout(spawnNextObstacleWithQuestion, 2000);
-  }
 
-  if (obstacle && obstacle.x + obstacle.width < 0) {
-    obstacle = null;
-  }
+    function spawnObstacle() {
+      obstacle = { x: canvas.width, y: 320, width: 40, height: 80 };
+    }
 
-  // Draw obstacle
-  ctx.fillStyle = "#555";
-  ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-}
+    function updateObstacle() {
+      if (!obstacle) return;
+      obstacle.x -= obstacleSpeed;
 
-function loseLife() {
-  lives--;
-  document.getElementById("lives").textContent = lives;
-  if (lives <= 0) gameOver();
-}
+      if (
+        obstacle.x < player.x + player.width + 5 &&
+        !obstacleHandled &&
+        player.grounded
+      ) {
+        if (answerWasCorrect) {
+          player.jump();
+        } else {
+          triggerSplat();
+          loseLife();
+        }
+        obstacleHandled = true;
+        setTimeout(() => {
+          obstacle = null;
+          if (gameRunning) spawnNext();
+        }, 1500);
+      }
 
-function gameOver() {
-  gameRunning = false;
-  document.getElementById("final-score").textContent = score;
-  document.getElementById("game-over-box").style.display = "block";
-}
+      if (obstacle && obstacle.x + obstacle.width < 0) {
+        obstacle = null;
+      }
 
-function showEffect(text, color = "gold") {
-  effectDiv.style.color = color;
-  effectDiv.textContent = text;
-  effectDiv.style.display = "block";
-  setTimeout(() => {
-    effectDiv.style.display = "none";
-  }, 1000);
-}
+      // draw obstacle
+      ctx.fillStyle = "#444";
+      ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+    }
 
-function spawnNextObstacleWithQuestion() {
-  if (!gameRunning) return;
-  spawnObstacle();
-  showQuestion();
-}
+    function triggerSplat() {
+      canvas.classList.add("splat");
+      setTimeout(() => canvas.classList.remove("splat"), 300);
+    }
 
-function startGame() {
-  gameRunning = true;
-  score = 0;
-  lives = 3;
-  document.getElementById("score").textContent = score;
-  document.getElementById("lives").textContent = lives;
-  document.getElementById("start-screen").style.display = "none";
-  spawnNextObstacleWithQuestion();
-}
+    function loseLife() {
+      lives--;
+      document.getElementById("lives").textContent = lives;
+      if (lives <= 0) {
+        gameOver();
+      }
+    }
 
-document.getElementById("start-btn").addEventListener("click", startGame);
+    function gameOver() {
+      gameRunning = false;
+      document.getElementById("final-score").textContent = score;
+      document.getElementById("game-over-box").style.display = "block";
+    }
 
-function animate() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (gameRunning) {
-    player.update();
-    player.draw();
-    updateObstacle();
-    requestAnimationFrame(animate);
-  }
-}
+    function spawnNext() {
+      showQuestion();
+      spawnObstacle();
+    }
 
-animate();
-</script>
+    function startGame() {
+      gameRunning = true;
+      lives = 3;
+      score = 0;
+      document.getElementById("score").textContent = score;
+      document.getElementById("lives").textContent = lives;
+      document.getElementById("start-screen").style.display = "none";
+      spawnNext();
+      requestAnimationFrame(animate);
+    }
+
+    document.getElementById("start-btn").addEventListener("click", startGame);
+    window.addEventListener("keydown", (e) => {
+      e.preventDefault(); // disable keyboard jump
+    });
+
+    function animate() {
+      if (!gameRunning) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      player.update();
+      player.draw();
+      updateObstacle();
+      requestAnimationFrame(animate);
+    }
+  </script>
 </body>
 </html>

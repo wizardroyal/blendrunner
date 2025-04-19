@@ -241,28 +241,31 @@
     function updateObstacle() {
       if (!obstacle) return;
       obstacle.x -= obstacleSpeed;
-
-      // Only jump if the player is grounded and the obstacle is near
-      if (obstacle.x < player.x + player.width + 10 && player.grounded && questionAnswered) {
-        player.jump();  // Trigger jump only if the question is answered correctly
-      }
-
-      // Collision logic
+    
+      // Check if obstacle has reached the player
       if (
         obstacle &&
         obstacle.x < player.x + player.width &&
-        obstacle.x + obstacle.width > player.x &&
-        player.y + player.height > obstacle.y
+        obstacle.x + obstacle.width > player.x
       ) {
-        obstacle = null;
-        loseLife();
+        // Trigger action only once
+        if (questionAnswered) {
+          // Correct answer: Jump
+          player.jump();
+          obstacle = null; // Remove obstacle after jump
+        } else {
+          // Wrong answer: Collision
+          obstacle = null;
+          loseLife();
+        }
       }
-
+    
       // Reset obstacle when it moves off-screen
       if (obstacle && obstacle.x + obstacle.width < 0) {
         obstacle = null;
       }
     }
+
 
     function drawObstacle() {
       if (!obstacle) return;
@@ -313,22 +316,25 @@
       });
     }
 
-    function checkAnswer(selected, correct) {
-      questionAnswered = true;
-      questionBox.style.display = "none";
+    let correctAnswerChosen = false; // use this instead of questionAnswered
 
-      if (selected === correct) {
+    function checkAnswer(selected, correct) {
+      correctAnswerChosen = (selected === correct);
+      questionBox.style.display = "none";
+    
+      if (correctAnswerChosen) {
         score += 10;
         document.getElementById("score").textContent = score;
       } else {
-        loseLife();
+        // Life will be lost on collision
       }
-
-      // Delay the next obstacle/question after the answer is processed
+    
+      // Delay before next obstacle/question
       setTimeout(() => {
         spawnNextObstacleWithQuestion();
       }, 2000);
     }
+
 
     function spawnNextObstacleWithQuestion() {
       if (!gameRunning) return;

@@ -241,34 +241,6 @@
       };
     }
 
-    function updateObstacle() {
-      if (!obstacle) return;
-      obstacle.x -= obstacleSpeed;
-
-      // Jump if answered correctly
-      if (obstacle.x < player.x + player.width + 10 && !obstacleHandled && player.grounded) {
-        if (questionAnswered) {
-          player.jump();
-        }
-        obstacleHandled = true;
-      }
-
-      // Collision
-      if (
-        obstacle &&
-        obstacle.x < player.x + player.width &&
-        obstacle.x + obstacle.width > player.x &&
-        player.y + player.height > obstacle.y
-      ) {
-        obstacle = null;
-        loseLife();
-      }
-
-      if (obstacle && obstacle.x + obstacle.width < 0) {
-        obstacle = null;
-      }
-    }
-
     function drawObstacle() {
       if (!obstacle) return;
       ctx.fillStyle = "#555";

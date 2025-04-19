@@ -1,346 +1,278 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Quiz Runner</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Runner Game</title>
   <style>
     body {
+      font-family: Arial, sans-serif;
       margin: 0;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f0f8ff;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      padding: 0;
+      background-color: #f0f0f0;
     }
-
-    #gameCanvas {
+    canvas {
       display: block;
-      background: linear-gradient(to top, #87ceeb, #ffffff);
-      border: 5px solid #4CAF50;
-      border-radius: 15px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+      margin: 0 auto;
+      background-color: #000;
     }
-
-    #question-box {
-      position: absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: rgba(255, 255, 255, 0.8);
-      border-radius: 12px;
-      padding: 10px 15px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-      max-width: 80%;
+    #gameOverBox {
       display: none;
-    }
-
-    #question-box h3 {
-      font-size: 20px;
-      color: #333;
-      margin: 0 0 15px;
-    }
-
-    #options {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .option {
-      padding: 12px 24px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.3s, transform 0.1s;
-      text-align: center;
-    }
-
-    .option:hover {
-      background-color: #45a049;
-      transform: scale(1.05);
-    }
-
-    #scoreboard {
       position: absolute;
-      top: 20px;
-      left: 20px;
-      text-align: left;
-      font-size: 18px;
-      color: #333;
-      background-color: rgba(255, 255, 255, 0.8);
-      padding: 12px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-
-    #game-over-box {
-      text-align: center;
-      display: none;
-      padding: 25px;
-      background: #fff;
-      border: 2px solid #444;
-      border-radius: 15px;
-      position: absolute;
-      top: 30%;
+      top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    }
-
-    .btn {
-      padding: 14px 28px;
-      font-size: 18px;
-      margin-top: 20px;
-      cursor: pointer;
-      border: none;
-      border-radius: 10px;
-      background-color: #4CAF50;
+      background-color: rgba(0, 0, 0, 0.7);
       color: white;
-      transition: background-color 0.3s ease, transform 0.1s ease;
-    }
-
-    .btn:hover {
-      background-color: #45a049;
-      transform: scale(1.05);
-    }
-
-    #start-screen {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 100vh;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #f7f7f7;
-      z-index: 999;
-    }
-
-    .start-content {
+      padding: 20px;
+      font-size: 24px;
       text-align: center;
-      background: #ffffffb3;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
     }
-
-    .start-content h1 {
-      margin-bottom: 20px;
-      font-size: 36px;
-      color: #333;
-    }
-
-    .start-content button {
-      padding: 15px 30px;
-      background-color: #4CAF50;
+    #scoreBox {
+      position: absolute;
+      top: 10px;
+      left: 10px;
       color: white;
-      font-size: 18px;
-      border: none;
-      border-radius: 10px;
+      font-size: 20px;
+    }
+    .button {
+      padding: 10px 20px;
+      font-size: 16px;
       cursor: pointer;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
     }
-
-    .start-content button:hover {
-      background-color: #45a049;
-    }
-
-    .flash {
-      animation: flashRed 0.3s;
-    }
-
-    @keyframes flashRed {
-      0% { background-color: #f44336; }
-      100% { background-color: #f0f8ff; }
-    }
-
-    .perfect-jump {
-      position: absolute;
-      top: 100px;
-      left: 200px;
-      font-size: 30px;
-      color: #4CAF50;
-      animation: perfectJumpAnim 1s ease-out;
-    }
-
-    .splat {
-      position: absolute;
-      top: 250px;
-      left: 150px;
-      font-size: 30px;
-      color: red;
-      animation: splatAnim 0.5s ease-in-out;
-    }
-
-    @keyframes perfectJumpAnim {
-      0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.2); opacity: 0.8; }
-      100% { transform: scale(1); opacity: 0; }
-    }
-
-    @keyframes splatAnim {
-      0% { transform: scale(1); opacity: 1; }
-      100% { transform: scale(1.5); opacity: 0; }
-    }
-
   </style>
 </head>
 <body>
   <canvas id="gameCanvas" width="800" height="400"></canvas>
-  <div id="question-box">
-    <h3 id="question-text"></h3>
-    <div id="options"></div>
+  <div id="gameOverBox">
+    <p id="gameOverMessage"></p>
+    <button class="button" id="reblendBtn">Reblend</button>
   </div>
-  <div id="scoreboard">
-    Score: <span id="score">0</span><br>
-    Lives: <span id="lives">3</span>
-  </div>
-  <div id="start-screen">
-    <div class="start-content">
-      <h1>Quiz Runner</h1>
-      <button id="start-btn">Start Game</button>
-    </div>
-  </div>
-  <div id="game-over-box">
-    <h2>Game Over!</h2>
-    <p>Your score: <span id="final-score"></span></p>
-    <button class="btn" onclick="location.reload()">Reblend</button>
-  </div>
+  <div id="scoreBox">Score: <span id="score">0</span> | Lives: <span id="lives">3</span></div>
+  
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    const questionBox = document.getElementById("question-box");
-    const questionText = document.getElementById("question-text");
-    const optionsContainer = document.getElementById("options");
-    const gameOverBox = document.getElementById("game-over-box");
-    const finalScoreDisplay = document.getElementById("final-score");
+
     let score = 0;
     let lives = 3;
-    let gameRunning = false;
-    let currentQuestionIndex = -1;
-    let obstacle = null;
     let correctStreak = 0;
-    let questionAnswered = false;
-    let questionTimer = null;
-    let obstacleHandled = false;
-    let obstacleSpeed = 2.5;
-    let player = {
-      x: 100,
-      y: 300,
-      width: 40,
-      height: 40,
-      vy: 0,
-      gravity: 1.5,
-      jumpStrength: -22,
-      grounded: true,
+    let gameRunning = true;
+    let player;
+    let obstacles = [];
+    let currentQuestion = null;
+    let questionTimeout;
+    let effectTimeout;
+
+    // Player class
+    class Player {
+      constructor() {
+        this.x = 50;
+        this.y = canvas.height - 70;
+        this.width = 40;
+        this.height = 70;
+        this.velocityY = 0;
+        this.gravity = 0.5;
+        this.isJumping = false;
+        this.jumpHeight = -12;
+      }
+
       update() {
-        this.vy += this.gravity;
-        this.y += this.vy;
-        if (this.y >= 300) {
-          this.y = 300;
-          this.vy = 0;
-          this.grounded = true;
-        } else {
-          this.grounded = false;
+        if (this.isJumping) {
+          this.velocityY += this.gravity;
+          this.y += this.velocityY;
+          if (this.y > canvas.height - this.height) {
+            this.y = canvas.height - this.height;
+            this.isJumping = false;
+            this.velocityY = 0;
+            this.triggerPerfectJump();
+          }
         }
-      },
+      }
+
       jump() {
-        if (this.grounded) {
-          this.vy = this.jumpStrength;
-          this.grounded = false;
+        if (!this.isJumping) {
+          this.isJumping = true;
+          this.velocityY = this.jumpHeight;
         }
-      },
+      }
+
       draw() {
-        ctx.fillStyle = "#ff5722";
+        ctx.fillStyle = "#00f";
         ctx.fillRect(this.x, this.y, this.width, this.height);
       }
-    };
 
-    const questions = [
-      { q: "What is the capital of France?", options: ["Paris", "Rome", "Berlin", "Madrid"], answer: "Paris" },
-      { q: "What is 5 + 3?", options: ["8", "6", "9", "7"], answer: "8" },
-      { q: "Who painted the Mona Lisa?", options: ["Leonardo da Vinci", "Vincent van Gogh", "Pablo Picasso", "Claude Monet"], answer: "Leonardo da Vinci" },
-      { q: "What is the largest planet?", options: ["Jupiter", "Saturn", "Earth", "Mars"], answer: "Jupiter" },
-      { q: "Who wrote 'Romeo and Juliet'?", options: ["William Shakespeare", "Charles Dickens", "Jane Austen", "Mark Twain"], answer: "William Shakespeare" },
-      { q: "What is the square root of 16?", options: ["4", "8", "16", "2"], answer: "4" },
-      { q: "Which gas do plants absorb from the air?", options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Hydrogen"], answer: "Carbon dioxide" },
-      { q: "What is the boiling point of water?", options: ["100°C", "90°C", "110°C", "120°C"], answer: "100°C" },
-      { q: "What is the capital of Japan?", options: ["Tokyo", "Seoul", "Beijing", "Bangkok"], answer: "Tokyo" },
-      { q: "What is the hardest natural substance?", options: ["Diamond", "Gold", "Iron", "Platinum"], answer: "Diamond" }
-    ];
+      triggerPerfectJump() {
+        // Display Perfect Jump Effect
+        const perfectJump = document.createElement("div");
+        perfectJump.innerText = "Perfect Jump!";
+        perfectJump.style.position = "absolute";
+        perfectJump.style.top = `${this.y - 50}px`;
+        perfectJump.style.left = `${this.x}px`;
+        perfectJump.style.color = "green";
+        perfectJump.style.fontSize = "30px";
+        document.body.appendChild(perfectJump);
+        setTimeout(() => {
+          document.body.removeChild(perfectJump);
+        }, 1000);
+      }
+    }
 
-    function showQuestion() {
-      const q = questions[++currentQuestionIndex % questions.length];
-      questionBox.style.display = "block";
-      questionText.textContent = q.q;
-      optionsContainer.innerHTML = "";
-      questionAnswered = false;
-      obstacleHandled = false;
+    // Obstacle class
+    class Obstacle {
+      constructor() {
+        this.x = canvas.width;
+        this.y = canvas.height - 50;
+        this.width = 30 + Math.random() * 50;
+        this.height = 50;
+        this.speed = 2;
+      }
 
-      q.options.forEach(option => {
+      update() {
+        this.x -= this.speed;
+      }
+
+      draw() {
+        ctx.fillStyle = "#f00";
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+      }
+
+      collisionWithPlayer() {
+        return this.x < player.x + player.width &&
+               this.x + this.width > player.x &&
+               this.y < player.y + player.height &&
+               this.y + this.height > player.y;
+      }
+    }
+
+    // Generate obstacle at intervals
+    function spawnObstacle() {
+      if (gameRunning) {
+        obstacles.push(new Obstacle());
+        setTimeout(spawnObstacle, 2000);
+      }
+    }
+
+    // Update game state
+    function updateGame() {
+      if (!gameRunning) return;
+
+      player.update();
+      obstacles.forEach(obstacle => {
+        obstacle.update();
+        if (obstacle.collisionWithPlayer()) {
+          gameOver(false);
+        }
+      });
+      
+      // Clean up obstacles that are off-screen
+      obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
+    }
+
+    // Draw game elements
+    function drawGame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      player.draw();
+      obstacles.forEach(obstacle => obstacle.draw());
+    }
+
+    // Game Over
+    function gameOver(won) {
+      gameRunning = false;
+      document.getElementById("gameOverMessage").innerText = won ? "Congratulations! You won!" : "Game Over!";
+      document.getElementById("gameOverBox").style.display = "block";
+    }
+
+    // Reset game
+    function resetGame() {
+      gameRunning = true;
+      player = new Player();
+      obstacles = [];
+      score = 0;
+      lives = 3;
+      correctStreak = 0;
+      document.getElementById("score").innerText = score;
+      document.getElementById("lives").innerText = lives;
+      document.getElementById("gameOverBox").style.display = "none";
+      spawnObstacle();
+      gameLoop();
+    }
+
+    // Game loop
+    function gameLoop() {
+      if (gameRunning) {
+        updateGame();
+        drawGame();
+        requestAnimationFrame(gameLoop);
+      }
+    }
+
+    // Handle keyboard input for jump
+    window.addEventListener("keydown", (e) => {
+      if (e.code === "Space") {
+        e.preventDefault();  // Prevents spacebar from triggering jumps
+      }
+    });
+
+    // Show question and handle answer
+    function showQuestion(question, options) {
+      clearTimeout(questionTimeout);
+      currentQuestion = question;
+
+      // Handle option selection
+      options.forEach((option, index) => {
         const button = document.createElement("button");
-        button.textContent = option;
-        button.classList.add("option");
-        button.addEventListener("click", () => {
-          checkAnswer(option, q.answer);
-        });
-        optionsContainer.appendChild(button);
+        button.innerText = option;
+        button.onclick = () => handleAnswer(option === question.correctAnswer);
+        document.body.appendChild(button);
       });
 
-      questionTimer = setTimeout(() => {
-        if (!questionAnswered) {
-          questionBox.style.display = "none";
-          spawnNextObstacleWithQuestion();
-        }
+      questionTimeout = setTimeout(() => {
+        // Hide the question after 7 seconds
+        currentQuestion = null;
+        // Optionally reset visual effects and move to the next stage
       }, 7000);
     }
 
-    function checkAnswer(selected, correct) {
-      clearTimeout(questionTimer);
-      questionAnswered = true;
-      questionBox.style.display = "none";
-
-      if (selected === correct) {
-        correctStreak++;
-        if (correctStreak >= 3) {
-          score += 100;
-          correctStreak = 0;
-        }
+    // Handle answer selection
+    function handleAnswer(isCorrect) {
+      if (isCorrect) {
         score += 10;
-        document.getElementById("score").textContent = score;
-        obstacleHandled = true;
-        displayPerfectJump();
-        setTimeout(spawnNextObstacleWithQuestion, 2000);
+        correctStreak++;
+        player.jump();
       } else {
-        correctStreak = 0;
-        loseLife();
-        obstacleHandled = true;
-        displaySplat();
-        setTimeout(spawnNextObstacleWithQuestion, 2000);
+        lives--;
+        if (lives <= 0) {
+          gameOver(false);
+        }
       }
+
+      document.getElementById("score").innerText = score;
+      document.getElementById("lives").innerText = lives;
     }
 
-    function displayPerfectJump() {
-      const perfectJumpDiv = document.createElement('div');
-      perfectJumpDiv.classList.add('perfect-jump');
-      perfectJumpDiv.textContent = "Perfect Jump!";
-      document.body.appendChild(perfectJumpDiv);
-      setTimeout(() => perfectJumpDiv.remove(), 1000);
-    }
-
-    function displaySplat() {
-      const splatDiv = document.createElement('div');
-      splatDiv.classList.add('splat');
-      splatDiv.textContent = "Splat!";
-      document.body.appendChild(splatDiv);
-      setTimeout(() => splatDiv.remove(), 500);
-    }
-
-    function spawnNextObstacleWithQuestion() {
-      if (!gameRunning) return;
+    // Start game
+    window.onload = () => {
+      player = new Player();
       spawnObstacle();
+      gameLoop();
+
+      // Start by showing a question after 2 seconds
+      setTimeout(() => {
+        showQuestion({
+          question: "What is 2 + 2?",
+          options: ["3", "4", "5"],
+          correctAnswer: "4"
+        });
+      }, 2000);
+    };
+
+    // Reblend (Restart) the game
+    document.getElementById("reblendBtn").addEventListener("click", resetGame);
+  </script>
+</body>
+</html>

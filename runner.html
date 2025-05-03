@@ -408,10 +408,6 @@
         if (!questionAnswered) {
           questionBox.style.display = "none";
           questionAnswered = true; // Mark as answered to trigger collision
-          // Spawn next question only if obstacle is handled or gone
-          if (!obstacle || obstacle.x + obstacle.width < 0) {
-            spawnNextObstacleWithQuestion();
-          }
         }
       }, getQuestionTimeout());
 
@@ -434,16 +430,12 @@
           loseLife(); // Collide and lose life if unanswered or answered incorrectly
         }
         obstacleHandled = true;
-        // Spawn next question if question was answered
-        if (questionAnswered && (!lastAnswerCorrect || lastAnswerCorrect)) {
-          setTimeout(spawnNextObstacleWithQuestion, 1000); // Delay to match feedback
-        }
       }
 
+      // Remove obstacle when it passes off-screen and spawn next question
       if (obstacle && obstacle.x + obstacle.width < 0) {
         obstacle = null;
-        // Spawn next obstacle and question if question was unanswered
-        if (!questionAnswered) {
+        if (questionAnswered) {
           spawnNextObstacleWithQuestion();
         }
       }
@@ -471,7 +463,7 @@
       setTimeout(() => {
         questionBox.style.display = "none";
         // Spawn next obstacle/question if obstacle is handled or gone
-        if (!obstacle || obstacle.x + obstacle.width < 0 || obstacleHandled) {
+        if (obstacleHandled || !obstacle || obstacle.x + obstacle.width < 0) {
           spawnNextObstacleWithQuestion();
         }
       }, 1000); // Delay to show feedback

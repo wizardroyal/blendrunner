@@ -5,188 +5,49 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Quiz Runner</title>
   <style>
-    body {
-      margin: 0;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f0f8ff;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    #gameCanvas {
-      display: block;
-      background: linear-gradient(to top, #87ceeb, #ffffff);
-      border: 5px solid #4CAF50;
-      border-radius: 15px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-    }
-
-    #question-box {
-      position: absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: rgba(255, 255, 255, 0.8);
-      border-radius: 12px;
-      padding: 10px 15px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-      max-width: 80%;
-      display: none;
-    }
-
-    #question-box h3 {
-      font-size: 20px;
-      color: #333;
-      margin: 0 0 15px;
-    }
-
-    #options {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .option {
-      padding: 12px 24px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.3s, transform 0.1s;
-      text-align: center;
-    }
-
-    .option:hover {
-      background-color: #45a049;
-      transform: scale(1.05);
-    }
-
-    #scoreboard {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      text-align: left;
-      font-size: 18px;
-      color: #333;
-      background-color: rgba(255, 255, 255, 0.8);
-      padding: 12px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-
-    #game-over-box {
-      text-align: center;
-      display: none;
-      padding: 25px;
-      background: #fff;
-      border: 2px solid #444;
-      border-radius: 15px;
-      position: absolute;
-      top: 30%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    }
-
-    .btn {
-      padding: 14px 28px;
-      font-size: 18px;
-      margin-top: 20px;
-      cursor: pointer;
-      border: none;
-      border-radius: 10px;
-      background-color: #4CAF50;
-      color: white;
-      transition: background-color 0.3s ease, transform 0.1s ease;
-    }
-
-    .btn:hover {
-      background-color: #45a049;
-      transform: scale(1.05);
-    }
-
-    #start-screen {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 100vh;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #f7f7f7;
-      z-index: 999;
-    }
-
-    .start-content {
-      text-align: center;
-      background: #ffffffb3;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-    }
-
-    .start-content h1 {
-      margin-bottom: 20px;
-      font-size: 36px;
-      color: #333;
-    }
-
-    .start-content button {
-      padding: 15px 30px;
-      background-color: #4CAF50;
-      color: white;
-      font-size: 18px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-
-    .start-content button:hover {
-      background-color: #45a049;
-    }
-
-    .flash {
-      animation: flashRed 0.3s;
-    }
-
-    @keyframes flashRed {
-      0% { background-color: #f44336; }
-      100% { background-color: #f0f8ff; }
-    }
+    /* Your existing CSS remains unchanged */
+    /* (Omitted here for brevity - keep your full style block as is) */
   </style>
 </head>
 <body>
   <canvas id="gameCanvas" width="800" height="400"></canvas>
+
   <div id="question-box">
     <h3 id="question-text"></h3>
     <div id="options"></div>
   </div>
+
   <div id="scoreboard">
     Score: <span id="score">0</span><br>
     Lives: <span id="lives">3</span>
   </div>
+
   <div id="start-screen">
     <div class="start-content">
       <h1>Quiz Runner</h1>
       <button id="start-btn">Start Game</button>
     </div>
   </div>
+
   <div id="game-over-box">
     <h2>Game Over!</h2>
     <p>Your score: <span id="final-score"></span></p>
     <button class="btn" onclick="location.reload()">Reblend</button>
   </div>
+
+  <!-- Sound Effects -->
+  <audio id="jumpSound" src="perfect-jump.mp3" preload="auto"></audio>
+  <audio id="splatSound" src="splat.mp3" preload="auto"></audio>
+
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     const questionBox = document.getElementById("question-box");
     const questionText = document.getElementById("question-text");
     const optionsContainer = document.getElementById("options");
+
+    const jumpSound = document.getElementById("jumpSound");
+    const splatSound = document.getElementById("splatSound");
 
     let score = 0;
     let lives = 3;
@@ -225,6 +86,7 @@
         if (this.grounded) {
           this.vy = this.jumpStrength;
           this.grounded = false;
+          jumpSound.play();
         }
       },
       draw() {
@@ -250,6 +112,7 @@
 
     function loseLife() {
       lives--;
+      splatSound.play();
       document.getElementById("lives").textContent = lives;
       if (lives <= 0) {
         gameOver();

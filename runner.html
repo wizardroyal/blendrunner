@@ -5,40 +5,196 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Quiz Runner</title>
   <style>
-    /* Your existing CSS remains unchanged */
-    /* (Omitted here for brevity - keep your full style block as is) */
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f8ff;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    #gameCanvas {
+      display: block;
+      background: linear-gradient(to top, #87ceeb, #ffffff);
+      border: 5px solid #4CAF50;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    }
+
+    #question-box {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 12px;
+      padding: 10px 15px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      max-width: 80%;
+      display: none;
+    }
+
+    #question-box h3 {
+      font-size: 20px;
+      color: #333;
+      margin: 0 0 15px;
+    }
+
+    #options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .option {
+      padding: 12px 24px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.1s;
+      text-align: center;
+    }
+
+    .option:hover {
+      background-color: #45a049;
+      transform: scale(1.05);
+    }
+
+    .option.correct {
+      background-color: #2ecc71 !important; /* Green for correct answer */
+    }
+
+    .option.incorrect {
+      background-color: #e74c3c !important; /* Red for incorrect answer */
+    }
+
+    #scoreboard {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      text-align: left;
+      font-size: 18px;
+      color: #333;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 12px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #game-over-box {
+      text-align: center;
+      display: none;
+      padding: 25px;
+      background: #fff;
+      border: 2px solid #444;
+      border-radius: 15px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
+
+    .btn {
+      padding: 14px 28px;
+      font-size: 18px;
+      margin-top: 20px;
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      background-color: #4CAF50;
+      color: white;
+      transition: background-color 0.3s ease, transform 0.1s ease;
+    }
+
+    .btn:hover {
+      background-color: #45a049;
+      transform: scale(1.05);
+    }
+
+    #start-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #f7f7f7;
+      z-index: 999;
+    }
+
+    .start-content {
+      text-align: center;
+      background: #ffffffb3;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .start-content h1 {
+      margin-bottom: 20px;
+      font-size: 36px;
+      color: #333;
+    }
+
+    .start-content button {
+      padding: 15px 30px;
+      background-color: #4CAF50;
+      color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .start-content button:hover {
+      background-color: #45a049;
+    }
+
+    .game-over-message {
+      white-space: pre-line; /* Preserve line breaks */
+    }
+
+    .animated-text {
+      opacity: 0;
+      animation: fadeIn 1s forwards;
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
   <canvas id="gameCanvas" width="800" height="400"></canvas>
-
   <div id="question-box">
     <h3 id="question-text"></h3>
     <div id="options"></div>
   </div>
-
   <div id="scoreboard">
     Score: <span id="score">0</span><br>
-    Lives: <span id="lives">3</span>
+    Lives: <span id="lives">4</span>
   </div>
-
   <div id="start-screen">
     <div class="start-content">
       <h1>Quiz Runner</h1>
       <button id="start-btn">Start Game</button>
     </div>
   </div>
-
   <div id="game-over-box">
-    <h2>Game Over!</h2>
+    <h2 id="game-over-title">Game Over!</h2>
+    <p class="game-over-message" id="game-over-message"></p>
     <p>Your score: <span id="final-score"></span></p>
-    <button class="btn" onclick="location.reload()">Reblend</button>
+    <button class="btn" onclick="resetGame()">Replay</button>
   </div>
-
-  <!-- Sound Effects -->
-  <audio id="jumpSound" src="perfect-jump.mp3" preload="auto"></audio>
-  <audio id="splatSound" src="splat.mp3" preload="auto"></audio>
-
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
@@ -46,11 +202,8 @@
     const questionText = document.getElementById("question-text");
     const optionsContainer = document.getElementById("options");
 
-    const jumpSound = document.getElementById("jumpSound");
-    const splatSound = document.getElementById("splatSound");
-
     let score = 0;
-    let lives = 3;
+    let lives = 4;
     let gameRunning = false;
     let currentQuestionIndex = -1;
     let obstacle = null;
@@ -59,7 +212,8 @@
     let questionTimer = null;
     let obstacleHandled = false;
     let obstacleSpeed = 2.5;
-    let obstaclePassed = false;
+    let lastAnswerCorrect = false;
+    let shuffledQuestions = [];
 
     const player = {
       x: 100,
@@ -86,7 +240,6 @@
         if (this.grounded) {
           this.vy = this.jumpStrength;
           this.grounded = false;
-          jumpSound.play();
         }
       },
       draw() {
@@ -94,6 +247,37 @@
         ctx.fillRect(this.x, this.y, this.width, this.height);
       }
     };
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    const questions = [
+      { q: "What is the capital of France?", options: ["Paris", "Rome", "Berlin", "Madrid"], answer: "Paris" },
+      { q: "What is 5 + 3?", options: ["8", "6", "9", "7"], answer: "8" },
+      { q: "Who painted the Mona Lisa?", options: ["Leonardo da Vinci", "Vincent van Gogh", "Pablo Picasso", "Claude Monet"], answer: "Leonardo da Vinci" },
+      { q: "What is the largest planet?", options: ["Jupiter", "Saturn", "Earth", "Mars"], answer: "Jupiter" },
+      { q: "Who wrote 'Romeo and Juliet'?", options: ["William Shakespeare", "Charles Dickens", "Jane Austen", "Mark Twain"], answer: "William Shakespeare" },
+      { q: "What is the square root of 16?", options: ["4", "8", "16", "2"], answer: "4" },
+      { q: "Which gas do plants absorb from the air?", options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Hydrogen"], answer: "Carbon dioxide" },
+      { q: "What is the boiling point of water?", options: ["100°C", "90°C", "110°C", "120°C"], answer: "100°C" },
+      { q: "What is the capital of Japan?", options: ["Tokyo", "Seoul", "Beijing", "Bangkok"], answer: "Tokyo" },
+      { q: "What is the hardest natural substance?", options: ["Diamond", "Gold", "Iron", "Platinum"], answer: "Diamond" },
+      { q: "What is 12 × 4?", options: ["48", "36", "52", "44"], answer: "48" },
+      { q: "Which element has the chemical symbol 'O'?", options: ["Oxygen", "Gold", "Iron", "Osmium"], answer: "Oxygen" },
+      { q: "Who discovered gravity?", options: ["Isaac Newton", "Albert Einstein", "Galileo Galilei", "Nikola Tesla"], answer: "Isaac Newton" },
+      { q: "What is the capital of Brazil?", options: ["Brasilia", "Rio de Janeiro", "São Paulo", "Salvador"], answer: "Brasilia" },
+      { q: "What is the smallest prime number?", options: ["2", "1", "3", "5"], answer: "2" },
+      { q: "Which planet is known as the Red Planet?", options: ["Mars", "Venus", "Mercury", "Jupiter"], answer: "Mars" },
+      { q: "Who wrote 'Pride and Prejudice'?", options: ["Jane Austen", "Emily Brontë", "Charlotte Brontë", "Virginia Woolf"], answer: "Jane Austen" },
+      { q: "What is the chemical formula for water?", options: ["H₂O", "CO₂", "O₂", "HCl"], answer: "H₂O" },
+      { q: "What is the capital of Australia?", options: ["Canberra", "Sydney", "Melbourne", "Brisbane"], answer: "Canberra" },
+      { q: "What is 7²?", options: ["49", "42", "56", "35"], answer: "49" }
+    ];
 
     function spawnObstacle() {
       obstacle = {
@@ -112,23 +296,82 @@
 
     function loseLife() {
       lives--;
-      splatSound.play();
       document.getElementById("lives").textContent = lives;
       if (lives <= 0) {
         gameOver();
       }
     }
 
+    function getGameOverMessage() {
+      if (currentQuestionIndex <= 4) {
+        return "Hell no, Stay off our Streets";
+      } else if (currentQuestionIndex <= 9) {
+        return "Learner, don't drive too close to him";
+      } else if (currentQuestionIndex <= 14) {
+        return "Certified! License to Blend";
+      } else {
+        return "Experienced Blender! Been there, done that";
+      }
+    }
+
+    function animateGameOverMessage(message) {
+      const lines = message.split('\n');
+      const messageContainer = document.getElementById("game-over-message");
+      messageContainer.innerHTML = "";
+      lines.forEach((line, index) => {
+        const p = document.createElement("p");
+        p.textContent = line;
+        p.classList.add("animated-text");
+        p.style.animationDelay = `${index * 1}s`; // Delay each line by 1 second
+        messageContainer.appendChild(p);
+      });
+    }
+
     function gameOver() {
       gameRunning = false;
       document.getElementById("final-score").textContent = score;
-      document.getElementById("game-over-box").style.display = "block";
+      const gameOverBox = document.getElementById("game-over-box");
+      const gameOverTitle = document.getElementById("game-over-title");
+      const gameOverMessage = document.getElementById("game-over-message");
+
+      if (currentQuestionIndex >= 19 && lives > 0) {
+        gameOverTitle.textContent = "Congratulations!";
+        const successMessage = "Wait a minute, Is that you Dmitry?\nDmitry?\nCongrats driver, you're CERTIFIED!!! Licensed to Blend";
+        animateGameOverMessage(successMessage);
+      } else {
+        gameOverTitle.textContent = "Game Over!";
+        gameOverMessage.textContent = getGameOverMessage();
+      }
+
+      gameOverBox.style.display = "block";
+    }
+
+    function resetGame() {
+      score = 0;
+      lives = 4;
+      currentQuestionIndex = -1;
+      obstacle = null;
+      correctStreak = 0;
+      questionAnswered = false;
+      obstacleHandled = false;
+      gameRunning = false;
+      shuffledQuestions = shuffleArray([...questions]);
+      document.getElementById("score").textContent = score;
+      document.getElementById("lives").textContent = lives;
+      document.getElementById("game-over-box").style.display = "none";
+      document.getElementById("start-screen").style.display = "flex";
+      questionBox.style.display = "none";
+      optionsContainer.innerHTML = "";
+      clearTimeout(questionTimer);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
     function startGame() {
       gameRunning = true;
-      lives = 3;
+      lives = 4;
       score = 0;
+      currentQuestionIndex = -1;
+      shuffledQuestions = shuffleArray([...questions]);
       document.getElementById("score").textContent = score;
       document.getElementById("lives").textContent = lives;
       document.getElementById("start-screen").style.display = "none";
@@ -136,8 +379,15 @@
       requestAnimationFrame(gameLoop);
     }
 
+    function getQuestionTimeout() {
+      if (currentQuestionIndex < 5) return 10000; // 10 seconds for questions 1–5
+      if (currentQuestionIndex < 10) return 8000; // 8 seconds for questions 6–10
+      if (currentQuestionIndex < 15) return 6000; // 6 seconds for questions 11–15
+      return 4000; // 4 seconds for questions 16–20
+    }
+
     function showQuestion() {
-      const q = questions[++currentQuestionIndex % questions.length];
+      const q = shuffledQuestions[++currentQuestionIndex % shuffledQuestions.length];
       questionBox.style.display = "block";
       questionText.textContent = q.q;
       optionsContainer.innerHTML = "";
@@ -149,7 +399,7 @@
         button.textContent = option;
         button.classList.add("option");
         button.addEventListener("click", () => {
-          checkAnswer(option, q.answer);
+          checkAnswer(option, q.answer, button);
         });
         optionsContainer.appendChild(button);
       });
@@ -159,7 +409,12 @@
           questionBox.style.display = "none";
           spawnNextObstacleWithQuestion();
         }
-      }, 7000);
+      }, getQuestionTimeout());
+
+      // Check if all questions are answered
+      if (currentQuestionIndex >= shuffledQuestions.length - 1 && lives > 0) {
+        setTimeout(gameOver, getQuestionTimeout());
+      }
     }
 
     function updateObstacle() {
@@ -168,32 +423,28 @@
       obstacle.x -= obstacleSpeed;
 
       if (obstacle.x < player.x + player.width + 10 && !obstacleHandled && player.grounded) {
-        if (questionAnswered && lastAnswerCorrect) {
-          player.jump();
-          obstacleHandled = true;
-        } else {
+        if (questionAnswered) {
+          if (lastAnswerCorrect) {
+            player.jump();
+          } else {
+            loseLife();
+          }
           obstacleHandled = true;
         }
       }
 
-      if (obstacle && obstacle.x < player.x + player.width && obstacle.x + obstacle.width > player.x && player.y + player.height > obstacle.y) {
-        obstacle = null;
-        loseLife();
-      }
-
       if (obstacle && obstacle.x + obstacle.width < 0) {
         obstacle = null;
-        obstaclePassed = true;
       }
     }
 
-    function checkAnswer(selected, correct) {
+    function checkAnswer(selected, correct, button) {
       clearTimeout(questionTimer);
       questionAnswered = true;
-      questionBox.style.display = "none";
 
-      if (selected === correct) {
-        lastAnswerCorrect = true;
+      lastAnswerCorrect = selected === correct;
+      if (lastAnswerCorrect) {
+        button.classList.add("correct");
         correctStreak++;
         if (correctStreak >= 3) {
           score += 100;
@@ -202,37 +453,22 @@
         score += 10;
         document.getElementById("score").textContent = score;
       } else {
-        lastAnswerCorrect = false;
+        button.classList.add("incorrect");
         correctStreak = 0;
         loseLife();
       }
 
       setTimeout(() => {
-        obstacleHandled = false;
+        questionBox.style.display = "none";
         spawnNextObstacleWithQuestion();
-      }, 2000);
+      }, 1000); // Delay to show feedback
     }
-
-    let lastAnswerCorrect = false;
 
     function spawnNextObstacleWithQuestion() {
       if (!gameRunning) return;
       spawnObstacle();
       showQuestion();
     }
-
-    const questions = [
-      { q: "What is the capital of France?", options: ["Paris", "Rome", "Berlin", "Madrid"], answer: "Paris" },
-      { q: "What is 5 + 3?", options: ["8", "6", "9", "7"], answer: "8" },
-      { q: "Who painted the Mona Lisa?", options: ["Leonardo da Vinci", "Vincent van Gogh", "Pablo Picasso", "Claude Monet"], answer: "Leonardo da Vinci" },
-      { q: "What is the largest planet?", options: ["Jupiter", "Saturn", "Earth", "Mars"], answer: "Jupiter" },
-      { q: "Who wrote 'Romeo and Juliet'?", options: ["William Shakespeare", "Charles Dickens", "Jane Austen", "Mark Twain"], answer: "William Shakespeare" },
-      { q: "What is the square root of 16?", options: ["4", "8", "16", "2"], answer: "4" },
-      { q: "Which gas do plants absorb from the air?", options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Hydrogen"], answer: "Carbon dioxide" },
-      { q: "What is the boiling point of water?", options: ["100°C", "90°C", "110°C", "120°C"], answer: "100°C" },
-      { q: "What is the capital of Japan?", options: ["Tokyo", "Seoul", "Beijing", "Bangkok"], answer: "Tokyo" },
-      { q: "What is the hardest natural substance?", options: ["Diamond", "Gold", "Iron", "Platinum"], answer: "Diamond" }
-    ];
 
     document.getElementById("start-btn").addEventListener("click", startGame);
 

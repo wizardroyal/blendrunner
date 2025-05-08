@@ -427,28 +427,24 @@
         obstacle.x -= obstacleSpeed;
       }
 
-      // Check if obstacle is close enough to trigger jump or collision
-      if (obstacle.x < player.x + player.width + 50 && !obstacleHandled && !obstacle.stopped && player.grounded) {
-        if (questionAnswered && lastAnswerCorrect) {
-          player.jump(); // Jump if answered correctly
-          obstacleHandled = true;
-        } else if (questionAnswered && !lastAnswerCorrect) {
-          loseLife(); // Collide and lose life if answered incorrectly
-          obstacle.stopped = true;
-          obstacleHandled = true;
-          setTimeout(() => {
-            obstacle = null;
-            spawnNextObstacleWithQuestion();
-          }, 2000);
-        } else if (!questionAnswered) {
-          loseLife(); // Collide and lose life if unanswered
-          obstacle.stopped = true;
-          obstacleHandled = true;
-          setTimeout(() => {
-            obstacle = null;
-            spawnNextObstacleWithQuestion();
-          }, 2000);
-        }
+      // Trigger jump for correct answer when obstacle is close
+      if (!obstacleHandled && questionAnswered && lastAnswerCorrect && obstacle.x < player.x + player.width + 50 && player.grounded) {
+        player.jump(); // Jump if answered correctly
+        obstacleHandled = true;
+      }
+
+      // Check for collision (wrong answer or no answer)
+      if (!obstacle.stopped && !obstacleHandled &&
+          obstacle.x < player.x + player.width &&
+          obstacle.x + obstacle.width > player.x &&
+          player.y + player.height > obstacle.y) {
+        loseLife(); // Collide and lose life
+        obstacle.stopped = true;
+        obstacleHandled = true;
+        setTimeout(() => {
+          obstacle = null;
+          spawnNextObstacleWithQuestion();
+        }, 2000);
       }
 
       // Remove obstacle when it passes off-screen (for correct answers)

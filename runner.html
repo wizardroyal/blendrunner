@@ -238,4 +238,292 @@
       },
       jump() {
         if (this.grounded) {
-          this.vy = this.jumpStrength
+          this.vy = this.jumpStrength;
+          this.grounded = false;
+        }
+      },
+      draw() {
+        ctx.fillStyle = "#ff5722";
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+      }
+    };
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    const questions = [
+      { q: "What is the capital of France?", options: ["Paris", "Rome", "Berlin", "Madrid"], answer: "Paris" },
+      { q: "What is 5 + 3?", options: ["8", "6", "9", "7"], answer: "8" },
+      { q: "Who painted the Mona Lisa?", options: ["Leonardo da Vinci", "Vincent van Gogh", "Pablo Picasso", "Claude Monet"], answer: "Leonardo da Vinci" },
+      { q: "What is the largest planet?", options: ["Jupiter", "Saturn", "Earth", "Mars"], answer: "Jupiter" },
+      { q: "Who wrote 'Romeo and Juliet'?", options: ["William Shakespeare", "Charles Dickens", "Jane Austen", "Mark Twain"], answer: "William Shakespeare" },
+      { q: "What is the square root of 16?", options: ["4", "8", "16", "2"], answer: "4" },
+      { q: "Which gas do plants absorb from the air?", options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Hydrogen"], answer: "Carbon dioxide" },
+      { q: "What is the boiling point of water?", options: ["100°C", "90°C", "110°C", "120°C"], answer: "100°C" },
+      { q: "What is the capital of Japan?", options: ["Tokyo", "Seoul", "Beijing", "Bangkok"], answer: "Tokyo" },
+      { q: "What is the hardest natural substance?", options: ["Diamond", "Gold", "Iron", "Platinum"], answer: "Diamond" },
+      { q: "What is 12 × 4?", options: ["48", "36", "52", "44"], answer: "48" },
+      { q: "Which element has the chemical symbol 'O'?", options: ["Oxygen", "Gold", "Iron", "Osmium"], answer: "Oxygen" },
+      { q: "Who discovered gravity?", options: ["Isaac Newton", "Albert Einstein", "Galileo Galilei", "Nikola Tesla"], answer: "Isaac Newton" },
+      { q: "What is the capital of Brazil?", options: ["Brasilia", "Rio de Janeiro", "São Paulo", "Salvador"], answer: "Brasilia" },
+      { q: "What is the smallest prime number?", options: ["2", "1", "3", "5"], answer: "2" },
+      { q: "Which planet is known as the Red Planet?", options: ["Mars", "Venus", "Mercury", "Jupiter"], answer: "Mars" },
+      { q: "Who wrote 'Pride and Prejudice'?", options: ["Jane Austen", "Emily Brontë", "Charlotte Brontë", "Virginia Woolf"], answer: "Jane Austen" },
+      { q: "What is the chemical formula for water?", options: ["H₂O", "CO₂", "O₂", "HCl"], answer: "H₂O" },
+      { q: "What is the capital of Australia?", options: ["Canberra", "Sydney", "Melbourne", "Brisbane"], answer: "Canberra" },
+      { q: "What is 7²?", options: ["49", "42", "56", "35"], answer: "49" }
+    ];
+
+    function spawnObstacle() {
+      obstacle = {
+        x: canvas.width,
+        y: 320,
+        width: 40,
+        height: 80,
+        stopped: false // Track if obstacle has stopped
+      };
+      obstacleHandled = false; // Reset for new obstacle
+    }
+
+    function drawObstacle() {
+      if (!obstacle) return;
+      ctx.fillStyle = "#555";
+      ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+    }
+
+    function loseLife() {
+      lives--;
+      document.getElementById("lives").textContent = lives;
+      if (lives <= 0) {
+        gameOver();
+      }
+    }
+
+    function getGameOverMessage() {
+      if (currentQuestionIndex <= 4) {
+        return "Hell no, Stay off our Streets";
+      } else if (currentQuestionIndex <= 9) {
+        return "Learner, don't drive too close to him";
+      } else if (currentQuestionIndex <= 14) {
+        return "Certified! License to Blend";
+      } else {
+        return "Experienced Blender! Been there, done that";
+      }
+    }
+
+    function animateGameOverMessage(message) {
+      const lines = message.split('\n');
+      const messageContainer = document.getElementById("game-over-message");
+      messageContainer.innerHTML = "";
+      lines.forEach((line, index) => {
+        const p = document.createElement("p");
+        p.textContent = line;
+        p.classList.add("animated-text");
+        p.style.animationDelay = `${index * 1}s`; // Delay each line by 1 second
+        messageContainer.appendChild(p);
+      });
+    }
+
+    function gameOver() {
+      gameRunning = false;
+      document.getElementById("final-score").textContent = score;
+      const gameOverBox = document.getElementById("game-over-box");
+      const gameOverTitle = document.getElementById("game-over-title");
+      const gameOverMessage = document.getElementById("game-over-message");
+
+      if (currentQuestionIndex >= 19 && lives > 0) {
+        gameOverTitle.textContent = "Congratulations!";
+        const successMessage = "Wait a minute, Is that you Dmitry?\nDmitry?\nCongrats driver, you're CERTIFIED!!! Licensed to Blend";
+        animateGameOverMessage(successMessage);
+      } else {
+        gameOverTitle.textContent = "Game Over!";
+        gameOverMessage.textContent = getGameOverMessage();
+      }
+
+      gameOverBox.style.display = "block";
+    }
+
+    function resetGame() {
+      score = 0;
+      lives = 4;
+      currentQuestionIndex = -1;
+      obstacle = null;
+      correctStreak = 0;
+      questionAnswered = false;
+      obstacleHandled = false;
+      gameRunning = false;
+      shuffledQuestions = [];
+      document.getElementById("score").textContent = score;
+      document.getElementById("lives").textContent = lives;
+      document.getElementById("game-over-box").style.display = "none";
+      document.getElementById("start-screen").style.display = "flex";
+      questionBox.style.display = "none";
+      optionsContainer.innerHTML = "";
+      clearTimeout(questionTimer);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function startGame() {
+      try {
+        gameRunning = true;
+        lives = 4;
+        score = 0;
+        currentQuestionIndex = -1;
+        shuffledQuestions = shuffleArray([...questions]);
+        document.getElementById("score").textContent = score;
+        document.getElementById("lives").textContent = lives;
+        document.getElementById("start-screen").style.display = "none";
+        spawnNextObstacleWithQuestion();
+        requestAnimationFrame(gameLoop);
+      } catch (error) {
+        console.error("Error starting game:", error);
+        alert("Failed to start the game. Please check the console for details.");
+      }
+    }
+
+    function getQuestionTimeout() {
+      if (currentQuestionIndex < 5) return 10000; // 10 seconds for questions 1–5
+      if (currentQuestionIndex < 10) return 8000; // 8 seconds for questions 6–10
+      if (currentQuestionIndex < 15) return 6000; // 6 seconds for questions 11–15
+      return 4000; // 4 seconds for questions 16–20
+    }
+
+    function showQuestion() {
+      try {
+        const q = shuffledQuestions[++currentQuestionIndex % shuffledQuestions.length];
+        questionBox.style.display = "block";
+        questionText.textContent = q.q;
+        optionsContainer.innerHTML = "";
+        questionAnswered = false;
+        obstacleHandled = false;
+
+        q.options.forEach(option => {
+          const button = document.createElement("button");
+          button.textContent = option;
+          button.classList.add("option");
+          button.addEventListener("click", () => {
+            checkAnswer(option, q.answer, button);
+          });
+          optionsContainer.appendChild(button);
+        });
+
+        questionTimer = setTimeout(() => {
+          if (!questionAnswered) {
+            questionBox.style.display = "none";
+            questionAnswered = true; // Mark as answered to trigger collision
+          }
+        }, getQuestionTimeout());
+
+        // Check if all questions are answered
+        if (currentQuestionIndex >= shuffledQuestions.length - 1 && lives > 0) {
+          setTimeout(gameOver, getQuestionTimeout());
+        }
+      } catch (error) {
+        console.error("Error showing question:", error);
+      }
+    }
+
+    function updateObstacle() {
+      if (!obstacle) return;
+
+      // Only move obstacle if not stopped
+      if (!obstacle.stopped) {
+        obstacle.x -= obstacleSpeed;
+      }
+
+      // Trigger jump for correct answer when obstacle is close
+      if (!obstacleHandled && questionAnswered && lastAnswerCorrect && obstacle.x < player.x + player.width + 50 && player.grounded) {
+        player.jump(); // Jump if answered correctly
+        obstacleHandled = true;
+      }
+
+      // Check for collision (wrong answer or no answer)
+      if (!obstacle.stopped && !obstacleHandled &&
+          obstacle.x < player.x + player.width &&
+          obstacle.x + obstacle.width > player.x &&
+          player.y + player.height > obstacle.y) {
+        loseLife(); // Collide and lose life
+        obstacle.stopped = true;
+        obstacleHandled = true;
+        setTimeout(() => {
+          obstacle = null;
+          spawnNextObstacleWithQuestion();
+        }, 2000); // 2-second delay before next question
+      }
+
+      // Remove obstacle when it passes off-screen (for correct answers)
+      if (obstacle && !obstacle.stopped && obstacle.x + obstacle.width < 0) {
+        obstacle = null;
+        if (questionAnswered) {
+          spawnNextObstacleWithQuestion();
+        }
+      }
+    }
+
+    function checkAnswer(selected, correct, button) {
+      clearTimeout(questionTimer);
+      questionAnswered = true;
+
+      lastAnswerCorrect = selected === correct;
+      if (lastAnswerCorrect) {
+        button.classList.add("correct");
+        correctStreak++;
+        if (correctStreak >= 3) {
+          score += 100;
+          correctStreak = 0;
+        }
+        score += 10;
+        document.getElementById("score").textContent = score;
+      } else {
+        button.classList.add("incorrect");
+        correctStreak = 0;
+      }
+
+      setTimeout(() => {
+        questionBox.style.display = "none";
+        // Spawn next obstacle/question if obstacle is handled or gone
+        if (obstacleHandled || !obstacle || obstacle.x + obstacle.width < 0) {
+          spawnNextObstacleWithQuestion();
+        }
+      }, 1000); // Delay to show feedback
+    }
+
+    function spawnNextObstacleWithQuestion() {
+      if (!gameRunning) return;
+      spawnObstacle();
+      showQuestion();
+    }
+
+    // Ensure DOM is loaded before attaching event listeners
+    document.addEventListener("DOMContentLoaded", () => {
+      const startBtn = document.getElementById("start-btn");
+      if (startBtn) {
+        startBtn.addEventListener("click", startGame);
+      } else {
+        console.error("Start button not found. Check ID 'start-btn'.");
+      }
+    });
+
+    function gameLoop() {
+      if (!gameRunning) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#228B22";
+      ctx.fillRect(0, 340, canvas.width, 60);
+
+      player.update();
+      player.draw();
+      updateObstacle();
+      drawObstacle();
+
+      requestAnimationFrame(gameLoop);
+    }
+  </script>
+</body>
+</html>

@@ -415,7 +415,8 @@
         questionTimer = setTimeout(() => {
           if (!questionAnswered) {
             questionBox.style.display = "none";
-            questionAnswered = true; // Mark as answered to trigger collision
+            questionAnswered = true;
+            lastAnswerCorrect = false; // Ensure no jump on timeout
           }
         }, getQuestionTimeout());
 

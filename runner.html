@@ -441,10 +441,8 @@
         loseLife(); // Collide and lose life
         obstacle.stopped = true;
         obstacleHandled = true;
-        setTimeout(() => {
-          obstacle = null;
-          spawnNextObstacleWithQuestion();
-        }, 2000);
+        obstacle = null;
+        spawnNextObstacleWithQuestion(); // Spawn next question immediately
       }
 
       // Remove obstacle when it passes off-screen (for correct answers)

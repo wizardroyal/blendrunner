@@ -284,10 +284,8 @@
         x: canvas.width,
         y: 320,
         width: 40,
-        height: 80,
-        stopped: false // Track if obstacle has stopped
+        height: 80
       };
-      obstacleHandled = false; // Reset for new obstacle
     }
 
     function drawObstacle() {
@@ -410,6 +408,10 @@
         if (!questionAnswered) {
           questionBox.style.display = "none";
           questionAnswered = true; // Mark as answered to trigger collision
+          // Spawn next question only if obstacle is handled or gone
+          if (!obstacle || obstacle.x + obstacle.width < 0) {
+            spawnNextObstacleWithQuestion();
+          }
         }
       }, getQuestionTimeout());
 
@@ -422,35 +424,26 @@
     function updateObstacle() {
       if (!obstacle) return;
 
-      // Only move obstacle if not stopped
-      if (!obstacle.stopped) {
-        obstacle.x -= obstacleSpeed;
-      }
+      obstacle.x -= obstacleSpeed;
 
-      // Trigger jump for correct answer when obstacle is close
-      if (!obstacleHandled && questionAnswered && lastAnswerCorrect && obstacle.x < player.x + player.width + 50 && player.grounded) {
-        player.jump(); // Jump if answered correctly
+      // Check if obstacle reaches the player
+      if (obstacle.x < player.x + player.width + 10 && !obstacleHandled && player.grounded) {
+        if (questionAnswered && lastAnswerCorrect) {
+          player.jump(); // Jump if answered correctly
+        } else {
+          loseLife(); // Collide and lose life if unanswered or answered incorrectly
+        }
         obstacleHandled = true;
+        // Spawn next question if question was answered
+        if (questionAnswered && (!lastAnswerCorrect || lastAnswerCorrect)) {
+          setTimeout(spawnNextObstacleWithQuestion, 1000); // Delay to match feedback
+        }
       }
 
-      // Check for collision (wrong answer or no answer)
-      if (!obstacle.stopped && !obstacleHandled &&
-          obstacle.x < player.x + player.width &&
-          obstacle.x + obstacle.width > player.x &&
-          player.y + player.height > obstacle.y) {
-        loseLife(); // Collide and lose life
-        obstacle.stopped = true;
-        obstacleHandled = true;
-        setTimeout(() => {
-          obstacle = null;
-          spawnNextObstacleWithQuestion();
-        }, 2000); // 2-second delay before next question
-      }
-
-      // Remove obstacle when it passes off-screen (for correct answers)
-      if (obstacle && !obstacle.stopped && obstacle.x + obstacle.width < 0) {
+      if (obstacle && obstacle.x + obstacle.width < 0) {
         obstacle = null;
-        if (questionAnswered) {
+        // Spawn next obstacle and question if question was unanswered
+        if (!questionAnswered) {
           spawnNextObstacleWithQuestion();
         }
       }
@@ -478,7 +471,7 @@
       setTimeout(() => {
         questionBox.style.display = "none";
         // Spawn next obstacle/question if obstacle is handled or gone
-        if (obstacleHandled || !obstacle || obstacle.x + obstacle.width < 0) {
+        if (!obstacle || obstacle.x + obstacle.width < 0 || obstacleHandled) {
           spawnNextObstacleWithQuestion();
         }
       }, 1000); // Delay to show feedback

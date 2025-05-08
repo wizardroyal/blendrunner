@@ -284,10 +284,11 @@
         x: canvas.width,
         y: 320,
         width: 40,
-        height: 80
+        height: 80,
+        stopped: false // Track if obstacle has stopped
       };
       obstacleHandled = false; // Reset for new obstacle
-    }  
+    }
 
     function drawObstacle() {
       if (!obstacle) return;
@@ -421,32 +422,41 @@
     function updateObstacle() {
       if (!obstacle) return;
 
-      obstacle.x -= obstacleSpeed;
-
-      // Check if obstacle reaches the player
-      if (obstacle.x < player.x + player.width + 10 && !obstacleHandled && player.grounded) {
-        if (questionAnswered && lastAnswerCorrect) {
-          player.jump(); // Jump if answered correctly
-        } else {
-          loseLife(); // Collide and lose life if unanswered or answered incorrectly
-        }
-        obstacleHandled = true;
+      // Only move obstacle if not stopped
+      if (!obstacle.stopped) {
+        obstacle.x -= obstacleSpeed;
       }
 
-      // Remove obstacle when it passes off-screen and spawn next question
-      if (obstacle && obstacle.x + obstacle.width < 0) {
+      // Check if obstacle is close enough to trigger jump or collision
+      if (obstacle.x < player.x + player.width + 50 && !obstacleHandled && !obstacle.stopped && player.grounded) {
+        if (questionAnswered && lastAnswerCorrect) {
+          player.jump(); // Jump if answered correctly
+          obstacleHandled = true;
+        } else if (questionAnswered && !lastAnswerCorrect) {
+          loseLife(); // Collide and lose life if answered incorrectly
+          obstacle.stopped = true;
+          obstacleHandled = true;
+          setTimeout(() => {
+            obstacle = null;
+            spawnNextObstacleWithQuestion();
+          }, 2000);
+        } else if (!questionAnswered) {
+          loseLife(); // Collide and lose life if unanswered
+          obstacle.stopped = true;
+          obstacleHandled = true;
+          setTimeout(() => {
+            obstacle = null;
+            spawnNextObstacleWithQuestion();
+          }, 2000);
+        }
+      }
+
+      // Remove obstacle when it passes off-screen (for correct answers)
+      if (obstacle && !obstacle.stopped && obstacle.x + obstacle.width < 0) {
         obstacle = null;
         if (questionAnswered) {
           spawnNextObstacleWithQuestion();
         }
-      }
-
-      if (obstacle && obstacle.x < player.x + player.width && obstacle.x + obstacle.width > player.x && player.y + player.height > obstacle.y) {
-        loseLife();
-        setTimeout(() => {
-          spawnNextObstacleWithQuestion();
-        }, 2000);
-        obstacle = null;
       }
     }
 

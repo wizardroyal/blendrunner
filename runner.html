@@ -187,7 +187,7 @@
     <div class="start-content">
       <h1>Quiz Runner</h1>
       <button id="start-btn">Start Game</button>
-    </div>
+    </ cyclone>
   </div>
   <div id="game-over-box">
     <h2 id="game-over-title">Game Over!</h2>
@@ -454,7 +454,7 @@
         setTimeout(() => {
           obstacle = null;
           spawnNextObstacleWithQuestion();
-        }, 2000); // 2-second delay before next question
+        }, 1000); // 1-second delay before next question
       }
 
       // Remove obstacle when it passes off-screen (for correct answers)

@@ -284,8 +284,7 @@
         x: canvas.width,
         y: 320,
         width: 40,
-        height: 80,
-        stopped: false // Track if obstacle has stopped
+        height: 80
       };
       obstacleHandled = false; // Reset for new obstacle
     }
@@ -447,10 +446,8 @@
     function updateObstacle() {
       if (!obstacle) return;
 
-      // Only move obstacle if not stopped
-      if (!obstacle.stopped) {
-        obstacle.x -= obstacleSpeed;
-      }
+      // Move obstacle
+      obstacle.x -= obstacleSpeed;
 
       // Trigger jump for correct answer when obstacle is close
       if (!obstacleHandled && questionAnswered && lastAnswerCorrect && obstacle.x < player.x + player.width + 50 && player.grounded) {
@@ -459,24 +456,23 @@
       }
 
       // Check for collision (wrong answer or no answer)
-      if (!obstacle.stopped && !obstacleHandled &&
+      if (!obstacleHandled &&
           obstacle.x < player.x + player.width &&
           obstacle.x + obstacle.width > player.x &&
           player.y + player.height > obstacle.y) {
         loseLife(); // Collide and lose life
-        obstacle.stopped = true;
         obstacleHandled = true;
         if (questionAnswered && !lastAnswerCorrect) {
           questionBox.style.display = "none"; // Hide question box on collision for timeout or incorrect
         }
+        obstacle = null; // Make obstacle vanish immediately
         setTimeout(() => {
-          obstacle = null;
           spawnNextObstacleWithQuestion();
         }, 1000); // 1-second delay before next question
       }
 
       // Remove obstacle when it passes off-screen (for correct answers)
-      if (obstacle && !obstacle.stopped && obstacle.x + obstacle.width < 0) {
+      if (obstacle && obstacle.x + obstacle.width < 0) {
         obstacle = null;
         if (questionAnswered) {
           spawnNextObstacleWithQuestion();

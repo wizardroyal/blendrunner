@@ -429,9 +429,9 @@
 
         questionTimer = setTimeout(() => {
           if (!questionAnswered) {
-            questionBox.style.display = "none";
             questionAnswered = true;
             lastAnswerCorrect = false; // Ensure no jump on timeout
+            // Do not hide question box here; wait for collision
           }
         }, getQuestionTimeout());
 
@@ -466,6 +466,9 @@
         loseLife(); // Collide and lose life
         obstacle.stopped = true;
         obstacleHandled = true;
+        if (questionAnswered && !lastAnswerCorrect) {
+          questionBox.style.display = "none"; // Hide question box on collision for timeout or incorrect
+        }
         setTimeout(() => {
           obstacle = null;
           spawnNextObstacleWithQuestion();

@@ -187,7 +187,7 @@
     <div class="start-content">
       <h1>Quiz Runner</h1>
       <button id="start-btn">Start Game</button>
-    </ cyclone>
+    </div>
   </div>
   <div id="game-over-box">
     <h2 id="game-over-title">Game Over!</h2>
@@ -211,7 +211,7 @@
     let questionAnswered = false;
     let questionTimer = null;
     let obstacleHandled = false;
-    let obstacleSpeed = 2.5;
+    let obstacleSpeed = 2.5; // Initial speed
     let lastAnswerCorrect = false;
     let shuffledQuestions = [];
 
@@ -357,6 +357,7 @@
       questionAnswered = false;
       obstacleHandled = false;
       gameRunning = false;
+      obstacleSpeed = 2.5; // Reset speed
       shuffledQuestions = [];
       document.getElementById("score").textContent = score;
       document.getElementById("lives").textContent = lives;
@@ -374,6 +375,7 @@
         lives = 4;
         score = 0;
         currentQuestionIndex = -1;
+        obstacleSpeed = 2.5; // Initialize speed
         shuffledQuestions = shuffleArray([...questions]);
         document.getElementById("score").textContent = score;
         document.getElementById("lives").textContent = lives;
@@ -387,15 +389,28 @@
     }
 
     function getQuestionTimeout() {
-      if (currentQuestionIndex < 5) return 10000; // 10 seconds for questions 1–5
-      if (currentQuestionIndex < 10) return 8000; // 8 seconds for questions 6–10
-      if (currentQuestionIndex < 15) return 6000; // 6 seconds for questions 11–15
-      return 4000; // 4 seconds for questions 16–20
+      if (currentQuestionIndex < 5) return 9000; // 9 seconds for questions 1–5
+      if (currentQuestionIndex < 10) return 7000; // 7 seconds for questions 6–10
+      if (currentQuestionIndex < 15) return 5000; // 5 seconds for questions 11–15
+      return 3000; // 3 seconds for questions 16–20
+    }
+
+    function updateDifficulty() {
+      if (currentQuestionIndex < 5) {
+        obstacleSpeed = 2.5;
+      } else if (currentQuestionIndex < 10) {
+        obstacleSpeed = 3.0;
+      } else if (currentQuestionIndex < 15) {
+        obstacleSpeed = 3.5;
+      } else {
+        obstacleSpeed = 4.0;
+      }
     }
 
     function showQuestion() {
       try {
         const q = shuffledQuestions[++currentQuestionIndex % shuffledQuestions.length];
+        updateDifficulty(); // Update speed before spawning obstacle
         questionBox.style.display = "block";
         questionText.textContent = q.q;
         optionsContainer.innerHTML = "";

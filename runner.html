@@ -198,22 +198,30 @@
 
     // Load images
     const chefImage = new Image();
-    chefImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/chef1.png"; // Chef image
+    chefImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/chef1.png";
     const trashImage = new Image();
-    trashImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/trash.png"; // Trash image
+    trashImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/trash.png";
 
     let imagesLoaded = 0;
     const totalImages = 2;
+    let imageLoadTimeout = null;
 
     function handleImageLoad() {
       imagesLoaded++;
+      console.log(`Image loaded. Total loaded: ${imagesLoaded}/${totalImages}`);
       if (imagesLoaded === totalImages) {
-        console.log("All images loaded");
+        clearTimeout(imageLoadTimeout);
+        console.log("All images loaded successfully");
       }
     }
 
     function handleImageError(e) {
-      console.warn("Image failed to load:", e.target.src, ". Using fallback rendering.");
+      imagesLoaded++;
+      console.warn(`Image failed to load: ${e.target.src}. Using fallback rendering. Total loaded: ${imagesLoaded}/${totalImages}`);
+      if (imagesLoaded === totalImages) {
+        clearTimeout(imageLoadTimeout);
+        console.log("Proceeding with fallback rendering");
+      }
     }
 
     chefImage.onload = handleImageLoad;
@@ -236,9 +244,9 @@
 
     const player = {
       x: 100,
-      y: 300,
-      width: 32, // Match chef1.png size (assumed 32x32)
-      height: 32,
+      y: 340 - 48, // Base at y: 340, height 48
+      width: 48, // Increased from 32 to 48
+      height: 48,
       vy: 0,
       gravity: 1,
       jumpStrength: -24,
@@ -247,8 +255,8 @@
         this.vy += this.gravity;
         this.y += this.vy;
 
-        if (this.y >= 300) {
-          this.y = 300;
+        if (this.y >= 340 - this.height) { // Ensure base stays at y: 340
+          this.y = 340 - this.height;
           this.vy = 0;
           this.grounded = true;
         } else {
@@ -265,7 +273,6 @@
         if (chefImage.complete && chefImage.naturalWidth !== 0) {
           ctx.drawImage(chefImage, this.x, this.y, this.width, this.height);
         } else {
-          // Fallback to rectangle if image fails
           ctx.fillStyle = "#ff5722";
           ctx.fillRect(this.x, this.y, this.width, this.height);
         }
@@ -306,9 +313,9 @@
     function spawnObstacle() {
       obstacle = {
         x: canvas.width,
-        y: 320,
-        width: 32, // Match trash.png size (assumed 32x32)
-        height: 32
+        y: 340 - 48, // Base at y: 340, height 48
+        width: 48, // Increased from 32 to 48
+        height: 48
       };
       obstacleHandled = false; // Reset for new obstacle
     }
@@ -318,7 +325,6 @@
       if (trashImage.complete && trashImage.naturalWidth !== 0) {
         ctx.drawImage(trashImage, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
       } else {
-        // Fallback to rectangle if image fails
         ctx.fillStyle = "#555";
         ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
       }
@@ -375,31 +381,41 @@
       questionBox.style.display = "none";
       optionsContainer.innerHTML = "";
       clearTimeout(questionTimer);
+      clearTimeout(imageLoadTimeout);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
     function startGame() {
       try {
-        if (imagesLoaded < totalImages) {
-          console.warn("Waiting for images to load...");
+        if (imagesLoaded < totalImages && !imageLoadTimeout) {
+          console.warn(`Waiting for images to load... (${imagesLoaded}/${totalImages})`);
+          imageLoadTimeout = setTimeout(() => {
+            console.warn("Image loading timeout. Starting game with fallbacks.");
+            proceedWithGameStart();
+          }, 5000); // 5-second timeout
           setTimeout(startGame, 100); // Retry after 100ms
           return;
         }
-        gameRunning = true;
-        lives = 4;
-        correctQuestionsAnswered = 0;
-        currentQuestionIndex = -1;
-        obstacleSpeed = 2.5; // Initialize speed
-        shuffledQuestions = shuffleArray([...questions]);
-        document.getElementById("score").textContent = `0/${totalQuestions}`;
-        document.getElementById("lives").textContent = lives;
-        document.getElementById("start-screen").style.display = "none";
-        spawnNextObstacleWithQuestion();
-        requestAnimationFrame(gameLoop);
+        proceedWithGameStart();
       } catch (error) {
         console.error("Error starting game:", error);
         alert("Failed to start the game. Please check the console for details.");
       }
+    }
+
+    function proceedWithGameStart() {
+      clearTimeout(imageLoadTimeout);
+      gameRunning = true;
+      lives = 4;
+      correctQuestionsAnswered = 0;
+      currentQuestionIndex = -1;
+      obstacleSpeed = 2.5; // Initialize speed
+      shuffledQuestions = shuffleArray([...questions]);
+      document.getElementById("score").textContent = `0/${totalQuestions}`;
+      document.getElementById("lives").textContent = lives;
+      document.getElementById("start-screen").style.display = "none";
+      spawnNextObstacleWithQuestion();
+      requestAnimationFrame(gameLoop);
     }
 
     function getQuestionTimeout() {

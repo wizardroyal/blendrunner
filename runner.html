@@ -198,9 +198,9 @@
 
     // Load images
     const chefImage = new Image();
-    chefImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/chef1.png"; // Chef image from repository
-    const bombImage = new Image();
-    bombImage.src = "https://opengameart.org/sites/default/files/bomb_sprite.png"; // Placeholder bomb image
+    chefImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/chef1.png"; // Chef image
+    const trashImage = new Image();
+    trashImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/trash.png"; // Trash image
 
     let imagesLoaded = 0;
     const totalImages = 2;
@@ -217,9 +217,9 @@
     }
 
     chefImage.onload = handleImageLoad;
-    bombImage.onload = handleImageLoad;
+    trashImage.onload = handleImageLoad;
     chefImage.onerror = handleImageError;
-    bombImage.onerror = handleImageError;
+    trashImage.onerror = handleImageError;
 
     let correctQuestionsAnswered = 0;
     const totalQuestions = 20;
@@ -307,7 +307,7 @@
       obstacle = {
         x: canvas.width,
         y: 320,
-        width: 32, // Match bomb image size
+        width: 32, // Match trash.png size (assumed 32x32)
         height: 32
       };
       obstacleHandled = false; // Reset for new obstacle
@@ -315,8 +315,8 @@
 
     function drawObstacle() {
       if (!obstacle) return;
-      if (bombImage.complete && bombImage.naturalWidth !== 0) {
-        ctx.drawImage(bombImage, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+      if (trashImage.complete && trashImage.naturalWidth !== 0) {
+        ctx.drawImage(trashImage, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
       } else {
         // Fallback to rectangle if image fails
         ctx.fillStyle = "#555";

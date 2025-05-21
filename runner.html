@@ -101,7 +101,7 @@
     }
 
     #game-over-image {
-      max-width: 500px; /* Increased size for larger image */
+      max-width: 500px; /* Larger image */
       width: 100%;
       height: auto;
       margin: 10px auto;
@@ -174,7 +174,7 @@
     <div id="options"></div>
   </div>
   <div id="scoreboard">
-    Score: <span id="score">0/0</span><br>
+    Score: <span id="score">0/20</span><br>
     Lives: <span id="lives">4</span>
   </div>
   <div id="start-screen">
@@ -197,7 +197,7 @@
     const optionsContainer = document.getElementById("options");
 
     let correctQuestionsAnswered = 0;
-    let noOfQuestions = 0;
+    const totalQuestions = 20;
     let lives = 4;
     let gameRunning = false;
     let currentQuestionIndex = -1;
@@ -299,7 +299,7 @@
 
     function gameOver() {
       gameRunning = false;
-      document.getElementById("final-score").textContent = `${correctQuestionsAnswered}/${noOfQuestions}`;
+      document.getElementById("final-score").textContent = `${correctQuestionsAnswered}/${totalQuestions}`;
       const gameOverBox = document.getElementById("game-over-box");
       const gameOverTitle = document.getElementById("game-over-title");
       const gameOverImage = document.getElementById("game-over-image");
@@ -325,7 +325,6 @@
 
     function resetGame() {
       correctQuestionsAnswered = 0;
-      noOfQuestions = 0;
       lives = 4;
       currentQuestionIndex = -1;
       obstacle = null;
@@ -334,7 +333,7 @@
       gameRunning = false;
       obstacleSpeed = 2.5; // Reset speed
       shuffledQuestions = [];
-      document.getElementById("score").textContent = "0/0";
+      document.getElementById("score").textContent = `0/${totalQuestions}`;
       document.getElementById("lives").textContent = lives;
       document.getElementById("game-over-box").style.display = "none";
       document.getElementById("start-screen").style.display = "flex";
@@ -349,11 +348,10 @@
         gameRunning = true;
         lives = 4;
         correctQuestionsAnswered = 0;
-        noOfQuestions = 0;
         currentQuestionIndex = -1;
         obstacleSpeed = 2.5; // Initialize speed
         shuffledQuestions = shuffleArray([...questions]);
-        document.getElementById("score").textContent = "0/0";
+        document.getElementById("score").textContent = `0/${totalQuestions}`;
         document.getElementById("lives").textContent = lives;
         document.getElementById("start-screen").style.display = "none";
         spawnNextObstacleWithQuestion();
@@ -392,8 +390,6 @@
         optionsContainer.innerHTML = "";
         questionAnswered = false;
         obstacleHandled = false;
-        noOfQuestions++; // Increment questions attempted
-        document.getElementById("score").textContent = `${correctQuestionsAnswered}/${noOfQuestions}`;
 
         q.options.forEach(option => {
           const button = document.createElement("button");
@@ -467,7 +463,7 @@
       if (lastAnswerCorrect) {
         button.classList.add("correct");
         correctQuestionsAnswered++; // Increment correct answers
-        document.getElementById("score").textContent = `${correctQuestionsAnswered}/${noOfQuestions}`;
+        document.getElementById("score").textContent = `${correctQuestionsAnswered}/${totalQuestions}`;
       } else {
         button.classList.add("incorrect");
       }

@@ -100,6 +100,14 @@
       box-shadow: 0 0 20px rgba(0,0,0,0.2);
     }
 
+    #game-over-image {
+      max-width: 300px; /* Adjust size as needed */
+      width: 100%;
+      height: auto;
+      margin: 10px auto;
+      display: block;
+    }
+
     .btn {
       padding: 14px 28px;
       font-size: 18px;
@@ -157,20 +165,6 @@
     .start-content button:hover {
       background-color: #45a049;
     }
-
-    .game-over-message {
-      white-space: pre-line; /* Preserve line breaks */
-    }
-
-    .animated-text {
-      opacity: 0;
-      animation: fadeIn 1s forwards;
-    }
-
-    @keyframes fadeIn {
-      0% { opacity: 0; transform: translateY(10px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
   </style>
 </head>
 <body>
@@ -191,9 +185,9 @@
   </div>
   <div id="game-over-box">
     <h2 id="game-over-title">Game Over!</h2>
-    <p class="game-over-message" id="game-over-message"></p>
+    <img id="game-over-image" src="" alt="Game Over Image"/>
     <p>Your score: <span id="final-score"></span></p>
-    <button class="btn" onclick="resetGame()">Replay</button>
+    <button class="btn" onclick="resetGame()">Retry</button>
   </div>
   <script>
     const canvas = document.getElementById("gameCanvas");
@@ -303,45 +297,27 @@
       }
     }
 
-    function getGameOverMessage() {
-      if (currentQuestionIndex <= 4) {
-        return "Hell no, Stay off our Streets";
-      } else if (currentQuestionIndex <= 9) {
-        return "Learner, don't drive too close to him";
-      } else if (currentQuestionIndex <= 14) {
-        return "Certified! License to Blend";
-      } else {
-        return "Experienced Blender! Been there, done that";
-      }
-    }
-
-    function animateGameOverMessage(message) {
-      const lines = message.split('\n');
-      const messageContainer = document.getElementById("game-over-message");
-      messageContainer.innerHTML = "";
-      lines.forEach((line, index) => {
-        const p = document.createElement("p");
-        p.textContent = line;
-        p.classList.add("animated-text");
-        p.style.animationDelay = `${index * 1}s`; // Delay each line by 1 second
-        messageContainer.appendChild(p);
-      });
-    }
-
     function gameOver() {
       gameRunning = false;
       document.getElementById("final-score").textContent = score;
       const gameOverBox = document.getElementById("game-over-box");
       const gameOverTitle = document.getElementById("game-over-title");
-      const gameOverMessage = document.getElementById("game-over-message");
+      const gameOverImage = document.getElementById("game-over-image");
 
       if (currentQuestionIndex >= 19 && lives > 0) {
         gameOverTitle.textContent = "Congratulations!";
-        const successMessage = "Wait a minute, Is that you Dmitry?\nDmitry?\nCongrats driver, you're CERTIFIED!!! Licensed to Blend";
-        animateGameOverMessage(successMessage);
+        gameOverImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/licensed.png";
       } else {
         gameOverTitle.textContent = "Game Over!";
-        gameOverMessage.textContent = getGameOverMessage();
+        if (currentQuestionIndex <= 4) {
+          gameOverImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/not.png";
+        } else if (currentQuestionIndex <= 9) {
+          gameOverImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/learner.png";
+        } else if (currentQuestionIndex <= 14) {
+          gameOverImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/progress.png";
+        } else {
+          gameOverImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/good.png";
+        }
       }
 
       gameOverBox.style.display = "block";

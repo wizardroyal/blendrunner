@@ -196,6 +196,31 @@
     const questionText = document.getElementById("question-text");
     const optionsContainer = document.getElementById("options");
 
+    // Load images
+    const chefImage = new Image();
+    chefImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/chef1.png"; // Chef image from repository
+    const bombImage = new Image();
+    bombImage.src = "https://opengameart.org/sites/default/files/bomb_sprite.png"; // Placeholder bomb image
+
+    let imagesLoaded = 0;
+    const totalImages = 2;
+
+    function handleImageLoad() {
+      imagesLoaded++;
+      if (imagesLoaded === totalImages) {
+        console.log("All images loaded");
+      }
+    }
+
+    function handleImageError(e) {
+      console.warn("Image failed to load:", e.target.src, ". Using fallback rendering.");
+    }
+
+    chefImage.onload = handleImageLoad;
+    bombImage.onload = handleImageLoad;
+    chefImage.onerror = handleImageError;
+    bombImage.onerror = handleImageError;
+
     let correctQuestionsAnswered = 0;
     const totalQuestions = 20;
     let lives = 4;
@@ -212,8 +237,8 @@
     const player = {
       x: 100,
       y: 300,
-      width: 40,
-      height: 40,
+      width: 32, // Match chef1.png size (assumed 32x32)
+      height: 32,
       vy: 0,
       gravity: 1,
       jumpStrength: -24,
@@ -237,8 +262,13 @@
         }
       },
       draw() {
-        ctx.fillStyle = "#ff5722";
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        if (chefImage.complete && chefImage.naturalWidth !== 0) {
+          ctx.drawImage(chefImage, this.x, this.y, this.width, this.height);
+        } else {
+          // Fallback to rectangle if image fails
+          ctx.fillStyle = "#ff5722";
+          ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
       }
     };
 
@@ -277,16 +307,21 @@
       obstacle = {
         x: canvas.width,
         y: 320,
-        width: 40,
-        height: 80
+        width: 32, // Match bomb image size
+        height: 32
       };
       obstacleHandled = false; // Reset for new obstacle
     }
 
     function drawObstacle() {
       if (!obstacle) return;
-      ctx.fillStyle = "#555";
-      ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+      if (bombImage.complete && bombImage.naturalWidth !== 0) {
+        ctx.drawImage(bombImage, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+      } else {
+        // Fallback to rectangle if image fails
+        ctx.fillStyle = "#555";
+        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+      }
     }
 
     function loseLife() {
@@ -345,6 +380,11 @@
 
     function startGame() {
       try {
+        if (imagesLoaded < totalImages) {
+          console.warn("Waiting for images to load...");
+          setTimeout(startGame, 100); // Retry after 100ms
+          return;
+        }
         gameRunning = true;
         lives = 4;
         correctQuestionsAnswered = 0;

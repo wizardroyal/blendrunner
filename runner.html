@@ -101,7 +101,7 @@
     }
 
     #game-over-image {
-      max-width: 300px; /* Adjust size as needed */
+      max-width: 500px; /* Increased size for larger image */
       width: 100%;
       height: auto;
       margin: 10px auto;
@@ -174,7 +174,7 @@
     <div id="options"></div>
   </div>
   <div id="scoreboard">
-    Score: <span id="score">0</span><br>
+    Score: <span id="score">0/0</span><br>
     Lives: <span id="lives">4</span>
   </div>
   <div id="start-screen">
@@ -187,7 +187,7 @@
     <h2 id="game-over-title">Game Over!</h2>
     <img id="game-over-image" src="" alt="Game Over Image"/>
     <p>Your score: <span id="final-score"></span></p>
-    <button class="btn" onclick="resetGame()">Retry</button>
+    <button class="btn" onclick="resetGame()">ReBlend</button>
   </div>
   <script>
     const canvas = document.getElementById("gameCanvas");
@@ -196,12 +196,12 @@
     const questionText = document.getElementById("question-text");
     const optionsContainer = document.getElementById("options");
 
-    let score = 0;
+    let correctQuestionsAnswered = 0;
+    let noOfQuestions = 0;
     let lives = 4;
     let gameRunning = false;
     let currentQuestionIndex = -1;
     let obstacle = null;
-    let correctStreak = 0;
     let questionAnswered = false;
     let questionTimer = null;
     let obstacleHandled = false;
@@ -299,7 +299,7 @@
 
     function gameOver() {
       gameRunning = false;
-      document.getElementById("final-score").textContent = score;
+      document.getElementById("final-score").textContent = `${correctQuestionsAnswered}/${noOfQuestions}`;
       const gameOverBox = document.getElementById("game-over-box");
       const gameOverTitle = document.getElementById("game-over-title");
       const gameOverImage = document.getElementById("game-over-image");
@@ -324,17 +324,17 @@
     }
 
     function resetGame() {
-      score = 0;
+      correctQuestionsAnswered = 0;
+      noOfQuestions = 0;
       lives = 4;
       currentQuestionIndex = -1;
       obstacle = null;
-      correctStreak = 0;
       questionAnswered = false;
       obstacleHandled = false;
       gameRunning = false;
       obstacleSpeed = 2.5; // Reset speed
       shuffledQuestions = [];
-      document.getElementById("score").textContent = score;
+      document.getElementById("score").textContent = "0/0";
       document.getElementById("lives").textContent = lives;
       document.getElementById("game-over-box").style.display = "none";
       document.getElementById("start-screen").style.display = "flex";
@@ -348,11 +348,12 @@
       try {
         gameRunning = true;
         lives = 4;
-        score = 0;
+        correctQuestionsAnswered = 0;
+        noOfQuestions = 0;
         currentQuestionIndex = -1;
         obstacleSpeed = 2.5; // Initialize speed
         shuffledQuestions = shuffleArray([...questions]);
-        document.getElementById("score").textContent = score;
+        document.getElementById("score").textContent = "0/0";
         document.getElementById("lives").textContent = lives;
         document.getElementById("start-screen").style.display = "none";
         spawnNextObstacleWithQuestion();
@@ -391,6 +392,8 @@
         optionsContainer.innerHTML = "";
         questionAnswered = false;
         obstacleHandled = false;
+        noOfQuestions++; // Increment questions attempted
+        document.getElementById("score").textContent = `${correctQuestionsAnswered}/${noOfQuestions}`;
 
         q.options.forEach(option => {
           const button = document.createElement("button");
@@ -463,16 +466,10 @@
       lastAnswerCorrect = selected === correct;
       if (lastAnswerCorrect) {
         button.classList.add("correct");
-        correctStreak++;
-        if (correctStreak >= 3) {
-          score += 100;
-          correctStreak = 0;
-        }
-        score += 10;
-        document.getElementById("score").textContent = score;
+        correctQuestionsAnswered++; // Increment correct answers
+        document.getElementById("score").textContent = `${correctQuestionsAnswered}/${noOfQuestions}`;
       } else {
         button.classList.add("incorrect");
-        correctStreak = 0;
       }
 
       setTimeout(() => {

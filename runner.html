@@ -206,9 +206,9 @@
     const totalImages = 2;
     let imageLoadTimeout = null;
 
-    function handleImageLoad() {
+    function handleImageLoad(e) {
       imagesLoaded++;
-      console.log(`Image loaded. Total loaded: ${imagesLoaded}/${totalImages}`);
+      console.log(`Image loaded: ${e.target.src}, Dimensions: ${e.target.naturalWidth}x${e.target.naturalHeight}, Total loaded: ${imagesLoaded}/${totalImages}`);
       if (imagesLoaded === totalImages) {
         clearTimeout(imageLoadTimeout);
         console.log("All images loaded successfully");
@@ -291,12 +291,12 @@
       {
         q: "What does RFIE stand for?",
         options: [
-          "Realtime fluent in ethereum",
-          "Remove friction in ethereum",
-          "Reduce friction increase expressivity",
-          "Reduce friction improve ethereum"
+          "Realtime Fluent In Ethereum",
+          "Remove Friction In Ethereum",
+          "Reduce Friction Increase Expressivity",
+          "Reduce Friction Improve Ethereum"
         ],
-        answer: "Reduce friction increase expressivity"
+        answer: "Reduce Friction Increase Expressivity"
       },
       {
         q: "Who among these is not a part of Fluent's team?",
@@ -329,7 +329,7 @@
         answer: "Blended Builders Club"
       },
       {
-        q: "What is Cult Chef on X?",
+        q: "Who is Cult Chef on X?",
         options: ["Toghrul Maharram", "Miss Chicken Nuggets Toes", "Nairolf", "Blendino"],
         answer: "Nairolf"
       },
@@ -343,8 +343,8 @@
         options: [
           "Uses just-in-time compilers to translate code to rWasm",
           "Only supports Solidity programming",
-          "Requires developers to learn a new language",
-          "Eliminates need for zero-knowledge proofs"
+          "Requires devs to learn a new language",
+          "Eliminates need for ZK-Proofs"
         ],
         answer: "Uses just-in-time compilers to translate code to rWasm"
       },
@@ -374,24 +374,24 @@
         answer: "Build apps that use smart contracts from multiple VMs"
       },
       {
-        q: "How does Fluent aim to onboard more developers into Web3?",
+        q: "How does Fluent aim to onboard more devs into Web3?",
         options: [
-          "Requiring them to learn new languages",
-          "Giving them grants to build dApps",
-          "Focusing only novice developers",
+          "Teach them new programming languages",
+          "Give them grants to build dApps",
+          "Focusing only on novice devs",
           "Allowing them use familiar tools to build dApps"
         ],
         answer: "Allowing them use familiar tools to build dApps"
       },
       {
-        q: "What of these captures Fluent’s mission?",
+        q: "Which of these captures Fluent’s mission?",
         options: [
           "Create a new cryptocurrency",
-          "Enable developers build apps in any language on Ethereum",
-          "Help developers create blended sandboxes",
+          "Enable devs build apps in any language on Ethereum",
+          "Help devs create blended sandboxes",
           "Make L3s expressive"
         ],
-        answer: "Enable developers build apps in any language on Ethereum"
+        answer: "Enable devs build apps in any language on Ethereum"
       },
       {
         q: "What is a benefit of Fluent’s rWasm over standard Wasm?",
@@ -401,7 +401,7 @@
           "Modifies the EVM",
           "Eliminate programming errors"
         ],
-        answer: "Simplifies correctness proofs for ZK"
+        answer: "Simplifies ZK proving"
       },
       {
         q: "Which of these best describes blended execution?",
@@ -419,7 +419,7 @@
           "No such thing",
           "App to launch memecoins on Fluent",
           "Tool to help devs convert their ideas to apps",
-          "App where web2 artists participate in drawing challenges to earn"
+          "App for web2 artists to earn from drawing contests"
         ],
         answer: "No such thing"
       },
@@ -446,7 +446,7 @@
           "Ability of devs to build apps that calls different contracts",
           "Freedom devs have to build web2 apps onchain"
         ],
-        answer: "The freedom devs have to build apps as they want, with familiar tools"
+        answer: "Freedom devs have to build apps as they want, with familiar tools"
       },
       {
         q: "Which of these is not a Contributory role in Fluent Discord?",
@@ -537,7 +537,7 @@
           imageLoadTimeout = setTimeout(() => {
             console.warn("Image loading timeout. Starting game with fallbacks.");
             proceedWithGameStart();
-          }, 5000); // 5-second timeout
+          }, 3000); // 3-second timeout
           setTimeout(startGame, 100); // Retry after 100ms
           return;
         }

@@ -207,7 +207,7 @@
     <p>Your score: <span id="final-score"></span></p>
     <div style="display: flex; justify-content: center; gap: 10px;">
       <button class="btn" onclick="resetGame()">ReBlend</button>
-      <button class="golden-btn" onclick="printGameOverImage()">Print Image</button>
+      <button class="golden-btn" onclick="downloadLicense()">Print License</button>
     </div>
   </div>
   <script>
@@ -519,7 +519,7 @@
         if (currentQuestionIndex <= 4) {
           gameOverImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/not.png";
         } else if (currentQuestionIndex <= 9) {
-          gameOverImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/learner.png";
+          gameOverImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/learneradiator: "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/learner.png";
         } else if (currentQuestionIndex <= 14) {
           gameOverImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/progress.png";
         } else {
@@ -551,35 +551,38 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
-    function printGameOverImage() {
+    function downloadLicense() {
       try {
         const gameOverImage = document.getElementById("game-over-image");
         if (!gameOverImage || !gameOverImage.src) {
           console.error("Game-over image not found or source is empty.");
-          alert("Unable to print: Image not found.");
+          alert("Unable to download: Image not found.");
           return;
         }
 
-        // Create a temporary window for printing
-        const printWindow = window.open("", "_blank");
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>Print Game Over Image</title>
-              <style>
-                body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-                img { max-width: 100%; max-height: 100%; }
-              </style>
-            </head>
-            <body>
-              <img src="${gameOverImage.src}" alt="Game Over Image" onload="window.print(); window.close();" />
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
+        // Fetch the image and create a downloadable link
+        fetch(gameOverImage.src)
+          .then(response => response.blob())
+          .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            // Determine file extension based on image source
+            const extension = gameOverImage.src.endsWith(".png") ? "png" : "jpeg";
+            a.download = `license.${extension}`; // Name the file "license.png" or "license.jpeg"
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+          })
+          .catch(error => {
+            console.error("Error downloading image:", error);
+            alert("Failed to download the image. Please check the console for details.");
+          });
       } catch (error) {
-        console.error("Error printing image:", error);
-        alert("Failed to print the image. Please check the console for details.");
+        console.error("Error initiating download:", error);
+        alert("Failed to download the image. Please check the console for details.");
       }
     }
 

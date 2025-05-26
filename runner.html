@@ -125,6 +125,24 @@
       transform: scale(1.05);
     }
 
+    .golden-btn {
+      padding: 14px 28px;
+      font-size: 18px;
+      margin-top: 20px;
+      margin-left: 10px; /* Space between buttons */
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      background-color: #FFD700; /* Golden color */
+      color: #333; /* Dark text for contrast */
+      transition: background-color 0.3s ease, transform 0.1s ease;
+    }
+
+    .golden-btn:hover {
+      background-color: #E6C200; /* Slightly darker gold on hover */
+      transform: scale(1.05);
+    }
+
     #start-screen {
       position: absolute;
       top: 0;
@@ -187,7 +205,10 @@
     <h2 id="game-over-title">Game Over!</h2>
     <img id="game-over-image" src="" alt="Game Over Image"/>
     <p>Your score: <span id="final-score"></span></p>
-    <button class="btn" onclick="resetGame()">ReBlend</button>
+    <div style="display: flex; justify-content: center; gap: 10px;">
+      <button class="btn" onclick="resetGame()">ReBlend</button>
+      <button class="golden-btn" onclick="printGameOverImage()">Print Image</button>
+    </div>
   </div>
   <script>
     const canvas = document.getElementById("gameCanvas");
@@ -528,6 +549,38 @@
       clearTimeout(questionTimer);
       clearTimeout(imageLoadTimeout);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function printGameOverImage() {
+      try {
+        const gameOverImage = document.getElementById("game-over-image");
+        if (!gameOverImage || !gameOverImage.src) {
+          console.error("Game-over image not found or source is empty.");
+          alert("Unable to print: Image not found.");
+          return;
+        }
+
+        // Create a temporary window for printing
+        const printWindow = window.open("", "_blank");
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Print Game Over Image</title>
+              <style>
+                body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+                img { max-width: 100%; max-height: 100%; }
+              </style>
+            </head>
+            <body>
+              <img src="${gameOverImage.src}" alt="Game Over Image" onload="window.print(); window.close();" />
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+      } catch (error) {
+        console.error("Error printing image:", error);
+        alert("Failed to print the image. Please check the console for details.");
+      }
     }
 
     function startGame() {

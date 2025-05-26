@@ -207,7 +207,7 @@
     <p>Your score: <span id="final-score"></span></p>
     <div style="display: flex; justify-content: center; gap: 10px;">
       <button class="btn" onclick="resetGame()">ReBlend</button>
-      <button class="golden-btn" onclick="printGameOverImage()">Print Image</button>
+      <button class="golden-btn" onclick="downloadLicense()">Print License</button>
     </div>
   </div>
   <script>
@@ -259,13 +259,13 @@
     let questionAnswered = false;
     let questionTimer = null;
     let obstacleHandled = false;
-    let obstacleSpeed = 2.5; // Initial speed
+    let obstacleSpeed = 2.5;
     let lastAnswerCorrect = false;
     let shuffledQuestions = [];
 
     const player = {
       x: 100,
-      y: 340 - 48, // Base at y: 340, height 48
+      y: 340 - 48,
       width: 48,
       height: 48,
       vy: 0,
@@ -479,11 +479,11 @@
     function spawnObstacle() {
       obstacle = {
         x: canvas.width,
-        y: 340 - 48, // Base at y: 340, height 48
+        y: 340 - 48,
         width: 48,
         height: 48
       };
-      obstacleHandled = false; // Reset for new obstacle
+      obstacleHandled = false;
     }
 
     function drawObstacle() {
@@ -538,7 +538,7 @@
       questionAnswered = false;
       obstacleHandled = false;
       gameRunning = false;
-      obstacleSpeed = 2.5; // Reset speed
+      obstacleSpeed = 2.5;
       shuffledQuestions = [];
       document.getElementById("score").textContent = `0/${totalQuestions}`;
       document.getElementById("lives").textContent = lives;
@@ -551,35 +551,36 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
-    function printGameOverImage() {
+    function downloadLicense() {
       try {
         const gameOverImage = document.getElementById("game-over-image");
         if (!gameOverImage || !gameOverImage.src) {
           console.error("Game-over image not found or source is empty.");
-          alert("Unable to print: Image not found.");
+          alert("Unable to download: Image not found.");
           return;
         }
 
-        // Create a temporary window for printing
-        const printWindow = window.open("", "_blank");
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>Print Game Over Image</title>
-              <style>
-                body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-                img { max-width: 100%; max-height: 100%; }
-              </style>
-            </head>
-            <body>
-              <img src="${gameOverImage.src}" alt="Game Over Image" onload="window.print(); window.close();" />
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
+        fetch(gameOverImage.src)
+          .then(response => response.blob())
+          .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            const extension = gameOverImage.src.endsWith(".png") ? "png" : "jpeg";
+            a.download = `license.${extension}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+          })
+          .catch(error => {
+            console.error("Error downloading image:", error);
+            alert("Failed to download the image. Please check the console for details.");
+          });
       } catch (error) {
-        console.error("Error printing image:", error);
-        alert("Failed to print the image. Please check the console for details.");
+        console.error("Error initiating download:", error);
+        alert("Failed to download the image. Please check the console for details.");
       }
     }
 
@@ -590,8 +591,8 @@
           imageLoadTimeout = setTimeout(() => {
             console.warn("Image loading timeout. Starting game with fallbacks.");
             proceedWithGameStart();
-          }, 3000); // 3-second timeout
-          setTimeout(startGame, 100); // Retry after 100ms
+          }, 3000);
+          setTimeout(startGame, 100);
           return;
         }
         proceedWithGameStart();
@@ -607,7 +608,7 @@
       lives = 4;
       correctQuestionsAnswered = 0;
       currentQuestionIndex = -1;
-      obstacleSpeed = 2.5; // Initialize speed
+      obstacleSpeed = 2.5;
       shuffledQuestions = shuffleArray([...questions]);
       document.getElementById("score").textContent = `0/${totalQuestions}`;
       document.getElementById("lives").textContent = lives;
@@ -617,10 +618,10 @@
     }
 
     function getQuestionTimeout() {
-      if (currentQuestionIndex < 5) return 9000; // 9 seconds for questions 1–5
-      if (currentQuestionIndex < 10) return 7000; // 7 seconds for questions 6–10
-      if (currentQuestionIndex < 15) return 5000; // 5 seconds for questions 11–15
-      return 3000; // 3 seconds for questions 16–20
+      if (currentQuestionIndex < 5) return 9000;
+      if (currentQuestionIndex < 10) return 7000;
+      if (currentQuestionIndex < 15) return 5000;
+      return 3000;
     }
 
     function updateDifficulty() {
@@ -638,7 +639,7 @@
     function showQuestion() {
       try {
         const q = shuffledQuestions[++currentQuestionIndex % shuffledQuestions.length];
-        updateDifficulty(); // Update speed before spawning obstacle
+        updateDifficulty();
         questionBox.style.display = "block";
         questionText.textContent = q.q;
         optionsContainer.innerHTML = "";
@@ -658,12 +659,10 @@
         questionTimer = setTimeout(() => {
           if (!questionAnswered) {
             questionAnswered = true;
-            lastAnswerCorrect = false; // Ensure no jump on timeout
-            // Do not hide question box here; wait for collision
+            lastAnswerCorrect = false;
           }
         }, getQuestionTimeout());
 
-        // Check if all questions are answered
         if (currentQuestionIndex >= shuffledQuestions.length - 1 && lives > 0) {
           setTimeout(gameOver, getQuestionTimeout());
         }
@@ -675,32 +674,28 @@
     function updateObstacle() {
       if (!obstacle) return;
 
-      // Move obstacle
       obstacle.x -= obstacleSpeed;
 
-      // Trigger jump for correct answer when obstacle is close
       if (!obstacleHandled && questionAnswered && lastAnswerCorrect && obstacle.x < player.x + player.width + 50 && player.grounded) {
-        player.jump(); // Jump if answered correctly
+        player.jump();
         obstacleHandled = true;
       }
 
-      // Check for collision (wrong answer or no answer)
       if (!obstacleHandled &&
           obstacle.x < player.x + player.width &&
           obstacle.x + obstacle.width > player.x &&
           player.y + player.height > obstacle.y) {
-        loseLife(); // Collide and lose life
+        loseLife();
         obstacleHandled = true;
         if (questionAnswered && !lastAnswerCorrect) {
-          questionBox.style.display = "none"; // Hide question box on collision for timeout or incorrect
+          questionBox.style.display = "none";
         }
-        obstacle = null; // Make obstacle vanish immediately
+        obstacle = null;
         setTimeout(() => {
           spawnNextObstacleWithQuestion();
-        }, 1000); // 1-second delay before next question
+        }, 1000);
       }
 
-      // Remove obstacle when it passes off-screen (for correct answers)
       if (obstacle && obstacle.x + obstacle.width < 0) {
         obstacle = null;
         if (questionAnswered) {
@@ -716,7 +711,7 @@
       lastAnswerCorrect = selected === correct;
       if (lastAnswerCorrect) {
         button.classList.add("correct");
-        correctQuestionsAnswered++; // Increment correct answers
+        correctQuestionsAnswered++;
         document.getElementById("score").textContent = `${correctQuestionsAnswered}/${totalQuestions}`;
       } else {
         button.classList.add("incorrect");
@@ -724,11 +719,10 @@
 
       setTimeout(() => {
         questionBox.style.display = "none";
-        // Spawn next obstacle/question if obstacle is handled or gone
         if (obstacleHandled || !obstacle || obstacle.x + obstacle.width < 0) {
           spawnNextObstacleWithQuestion();
         }
-      }, 1000); // Delay to show feedback
+      }, 1000);
     }
 
     function spawnNextObstacleWithQuestion() {
@@ -737,7 +731,6 @@
       showQuestion();
     }
 
-    // Ensure DOM is loaded before attaching event listeners
     document.addEventListener("DOMContentLoaded", () => {
       const startBtn = document.getElementById("start-btn");
       if (startBtn) {

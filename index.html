@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Blend Runner</title>
+  <title>Quiz Runner</title>
   <style>
     body {
       margin: 0;
@@ -219,9 +219,9 @@
 
     // Load images
     const chefImage = new Image();
-    chefImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/chef1.png";
+    chefImage.src = "https://i.imgur.com/O8WgsRY.png";
     const trashImage = new Image();
-    trashImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/trash.png";
+    trashImage.src = "https://i.imgur.com/bOjwAZ0.png";
 
     let imagesLoaded = 0;
     const totalImages = 2;
@@ -513,17 +513,17 @@
 
       if (currentQuestionIndex >= totalQuestions - 1 && lives > 0) {
         gameOverTitle.textContent = "Congratulations!";
-        gameOverImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/licensed.png";
+        gameOverImage.src = "https://i.imgur.com/rTUCWQu.png";
       } else {
         gameOverTitle.textContent = "Game Over!";
         if (correctQuestionsAnswered < 5) {
-          gameOverImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/not.png";
+          gameOverImage.src = "https://i.imgur.com/Oi1pPBy.png";
         } else if (correctQuestionsAnswered < 10) {
-          gameOverImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/learner.png";
+          gameOverImage.src = "https://i.imgur.com/h5Xsbsw.png";
         } else if (correctQuestionsAnswered < 15) {
-          gameOverImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/progress.png";
+          gameOverImage.src = "https://i.imgur.com/v6lsfTm.png";
         } else {
-          gameOverImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/good.png";
+          gameOverImage.src = "https://i.imgur.com/UxFittO.png";
         }
       }
 

@@ -219,9 +219,9 @@
 
     // Load images
     const chefImage = new Image();
-    chefImage.src = "https://github.com/wizardroyal/blendrunner/blob/main/chef1.png";
+    chefImage.src = "/chef1.png";
     const trashImage = new Image();
-    trashImage.src = "https://https://github.com/wizardroyal/blendrunner/blob/main/trash.png";
+    trashImage.src = "/trash.png";
 
     let imagesLoaded = 0;
     const totalImages = 2;
@@ -513,17 +513,17 @@
 
       if (currentQuestionIndex >= totalQuestions - 1 && lives > 0) {
         gameOverTitle.textContent = "Congratulations!";
-        gameOverImage.src = "https://github.com/wizardroyal/blendrunner/blob/main/licensed.png";
+        gameOverImage.src = "/licensed.png";
       } else {
         gameOverTitle.textContent = "Game Over!";
         if (correctQuestionsAnswered < 5) {
-          gameOverImage.src = "https://github.com/wizardroyal/blendrunner/blob/main/not.png";
+          gameOverImage.src = "/not.png";
         } else if (correctQuestionsAnswered < 10) {
-          gameOverImage.src = "https://github.com/wizardroyal/blendrunner/blob/main/learner.png";
+          gameOverImage.src = "/learner.png";
         } else if (correctQuestionsAnswered < 15) {
-          gameOverImage.src = "https://github.com/wizardroyal/blendrunner/blob/main/progress.png";
+          gameOverImage.src = "progress.png";
         } else {
-          gameOverImage.src = "https://github.com/wizardroyal/blendrunner/blob/main/good.png";
+          gameOverImage.src = "/good.png";
         }
       }
 

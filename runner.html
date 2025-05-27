@@ -193,7 +193,7 @@
   </div>
   <div id="scoreboard">
     Score: <span id="score">0/20</span><br>
-    Lives: <span id="lives">4</span>
+    Lives: <span id="lives">2</span>
   </div>
   <div id="start-screen">
     <div class="start-content">
@@ -252,7 +252,7 @@
 
     let correctQuestionsAnswered = 0;
     const totalQuestions = 20;
-    let lives = 4;
+    let lives = 2;
     let gameRunning = false;
     let currentQuestionIndex = -1;
     let obstacle = null;
@@ -511,16 +511,16 @@
       const gameOverTitle = document.getElementById("game-over-title");
       const gameOverImage = document.getElementById("game-over-image");
 
-      if (currentQuestionIndex >= 19 && lives > 0) {
+      if (currentQuestionIndex >= totalQuestions - 1 && lives > 0) {
         gameOverTitle.textContent = "Congratulations!";
         gameOverImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/licensed.png";
       } else {
         gameOverTitle.textContent = "Game Over!";
-        if (currentQuestionIndex <= 4) {
+        if (correctQuestionsAnswered < 5) {
           gameOverImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/not.png";
-        } else if (currentQuestionIndex <= 9) {
+        } else if (correctQuestionsAnswered < 10) {
           gameOverImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/learner.png";
-        } else if (currentQuestionIndex <= 14) {
+        } else if (correctQuestionsAnswered < 15) {
           gameOverImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/progress.png";
         } else {
           gameOverImage.src = "https://raw.githubusercontent.com/wizardroyal/blendrunner/main/good.png";
@@ -532,7 +532,7 @@
 
     function resetGame() {
       correctQuestionsAnswered = 0;
-      lives = 4;
+      lives = 2;
       currentQuestionIndex = -1;
       obstacle = null;
       questionAnswered = false;
@@ -605,7 +605,7 @@
     function proceedWithGameStart() {
       clearTimeout(imageLoadTimeout);
       gameRunning = true;
-      lives = 4;
+      lives = 2;
       correctQuestionsAnswered = 0;
       currentQuestionIndex = -1;
       obstacleSpeed = 2.5;
